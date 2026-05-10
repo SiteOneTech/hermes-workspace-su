@@ -6,7 +6,7 @@ Parent fork: https://github.com/SiteOneTech/hermes-agent
 Workspace upstream: https://github.com/outsourc-e/hermes-workspace
 Maintained fork: https://github.com/SiteOneTech/hermes-workspace-su
 Workspace upstream commit: 372b18a8e4e3fa7947ff3cf5651865560daca0a1
-Runtime folder: /home/hermes/.hermes/siteone-hermes-agent-sidecar/sidecars/hermes-workspace
+Runtime folder: /home/hermes/.hermes/hermes-workspace-su
 
 ## Purpose
 
@@ -14,11 +14,11 @@ This is a reversible, loopback-only UI sidecar for testing Hermes Workspace agai
 
 ## What Changed
 
-- Added a clean SiteOneTech/hermes-agent checkout at /home/hermes/.hermes/siteone-hermes-agent-sidecar.
-- Vendored Hermes Workspace under sidecars/hermes-workspace inside that checkout.
+- Added a clean SiteOneTech/hermes-workspace-su checkout at /home/hermes/.hermes/hermes-workspace-su for the maintained UI fork.
+- The original SiteOneTech/hermes-agent sidecar checkout remains as an installation history/rollback source.
 - Built Hermes Workspace with HermesWorld navigation disabled by VITE_HERMESWORLD_ENABLED=0.
 - Added /home/hermes/.config/hermes-workspace-sidecar.env for sidecar-only runtime settings.
-- Added /etc/systemd/system/hermes-workspace-sidecar.service to run the UI on loopback only.
+- Updated /etc/systemd/system/hermes-workspace-sidecar.service to run the UI from /home/hermes/.hermes/hermes-workspace-su.
 - Enabled the existing Hermes API server on 127.0.0.1:8642 by adding API_SERVER_ENABLED/API_SERVER_HOST/API_SERVER_PORT to /home/hermes/.hermes/.env.
 - Added sidecar-only profile identity metadata so the default profile can display as Zeus and use a custom avatar without renaming the runtime profile id.
 
@@ -155,7 +155,7 @@ curl -fsS http://127.0.0.1:3002/ >/tmp/hermes-workspace-local.html
 5. Remove the sidecar checkout if no longer needed:
 
    ```bash
-   rm -rf /home/hermes/.hermes/siteone-hermes-agent-sidecar
+   rm -rf /home/hermes/.hermes/hermes-workspace-su
    ```
 
 6. Restore any other backups from:
