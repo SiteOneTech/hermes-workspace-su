@@ -1,13 +1,7 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { BrainIcon, CodeIcon, PuzzleIcon } from '@hugeicons/core-free-icons'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
-
-type ProfileSummary = {
-  name: string
-  model?: string
-  active?: boolean
-}
+import { useWorkspaceIdentity } from '@/hooks/use-workspace-identity'
 
 type SuggestionChip = {
   label: string
@@ -44,20 +38,8 @@ export function ChatEmptyState({
   onSuggestionClick,
   compact = false,
 }: ChatEmptyStateProps) {
-  const [activeProfile, setActiveProfile] = useState<ProfileSummary | null>(null)
-
-  useEffect(() => {
-    fetch('/api/profiles/list')
-      .then((res) => res.json())
-      .then((data) => {
-        const profiles = data?.profiles as Array<ProfileSummary> | undefined
-        const active = profiles?.find((p) => p.active)
-        if (active) setActiveProfile(active)
-      })
-      .catch(() => {
-        // silently ignore — profile info is cosmetic
-      })
-  }, [])
+  const workspaceIdentity = useWorkspaceIdentity()
+  const activeProfile = workspaceIdentity.activeProfile
 
   return (
     <motion.div
@@ -70,8 +52,8 @@ export function ChatEmptyState({
         {/* Avatar in editorial frame, no glow — architectural restraint */}
         <div className="relative mb-6">
           <img
-            src="/claude-avatar.webp"
-            alt="Hermes Agent"
+            src={workspaceIdentity.avatarSrc}
+            alt={workspaceIdentity.profileDisplayName}
             className="relative size-20 rounded-md"
             style={{
               border: '1px solid var(--theme-border)',
@@ -82,11 +64,8 @@ export function ChatEmptyState({
         </div>
 
         {/* Editorial micro-label */}
-        <p
-          className="micro-label mb-2"
-          style={{ color: 'var(--theme-muted)' }}
-        >
-          Hermes Workspace
+        <p className="micro-label mb-2" style={{ color: 'var(--theme-muted)' }}>
+          {workspaceIdentity.workspaceName}
         </p>
 
         {/* Editorial display title */}
@@ -98,8 +77,11 @@ export function ChatEmptyState({
         </h2>
 
         {activeProfile && (
-          <span className="mt-2 text-xs" style={{ color: 'var(--theme-accent)' }}>
-            {activeProfile.name}
+          <span
+            className="mt-2 text-xs"
+            style={{ color: 'var(--theme-accent)' }}
+          >
+            {workspaceIdentity.profileDisplayName}
             {activeProfile.model ? ` · ${activeProfile.model}` : ''}
           </span>
         )}

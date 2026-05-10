@@ -23,10 +23,8 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { hapticTap } from '@/lib/haptics'
 import { getTheme, getThemeVariant, isDarkTheme, setTheme } from '@/lib/theme'
-import {
-  selectChatProfileDisplayName,
-  useChatSettingsStore,
-} from '@/hooks/use-chat-settings'
+import { UserAvatar } from '@/components/avatars'
+import { useWorkspaceIdentity } from '@/hooks/use-workspace-identity'
 
 const HERMES_WORLD_ENABLED =
   (import.meta as any).env?.VITE_HERMESWORLD_ENABLED !== '0'
@@ -173,7 +171,8 @@ export function MobileHamburgerMenu() {
 
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const profileDisplayName = useChatSettingsStore(selectChatProfileDisplayName)
+  const workspaceIdentity = useWorkspaceIdentity()
+  const profileDisplayName = workspaceIdentity.profileDisplayName
   const isChatRoute =
     pathname.startsWith('/chat') || pathname === '/new' || pathname === '/'
 
@@ -229,8 +228,8 @@ export function MobileHamburgerMenu() {
         >
           <div className="flex items-center gap-2.5">
             <img
-              src="/claude-avatar.webp"
-              alt="Hermes Agent"
+              src={workspaceIdentity.avatarSrc}
+              alt={workspaceIdentity.profileDisplayName}
               className="size-8 rounded-xl shrink-0"
             />
             <div className="flex flex-col leading-tight">
@@ -238,7 +237,7 @@ export function MobileHamburgerMenu() {
                 className="font-bold text-[15px] tracking-tight"
                 style={{ color: 'var(--color-ink, #111)' }}
               >
-                Hermes Agent
+                {workspaceIdentity.workspaceName}
               </span>
               <span
                 className="text-[11px]"
@@ -304,30 +303,12 @@ export function MobileHamburgerMenu() {
         >
           <div className="flex items-center gap-3 px-2">
             {/* User avatar + name + status dot */}
-            <div
-              className="size-9 rounded-xl shrink-0 flex items-center justify-center"
-              style={{
-                background:
-                  'var(--theme-accent-subtle, color-mix(in srgb, var(--theme-accent, #6366f1) 15%, transparent))',
-              }}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{
-                  color: 'var(--theme-accent, var(--color-accent, #6366f1))',
-                }}
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </div>
+            <UserAvatar
+              size={36}
+              src={workspaceIdentity.avatarSrc}
+              alt={profileDisplayName}
+              className="rounded-xl"
+            />
             <span
               className="text-[15px] font-semibold truncate"
               style={{ color: 'var(--color-ink, #111)' }}

@@ -4,16 +4,23 @@ import { cn } from '@/lib/utils'
 type AvatarProps = {
   size?: number
   className?: string
+  src?: string | null
+  alt?: string
 }
 
 /**
  * Assistant avatar — Hermes Agent caduceus on Nous blue.
  */
-function AssistantAvatarComponent({ size = 28, className }: AvatarProps) {
+function AssistantAvatarComponent({
+  size = 28,
+  className,
+  src,
+  alt = 'Hermes Agent',
+}: AvatarProps) {
   return (
     <img
-      src="/claude-avatar.webp"
-      alt="Hermes Agent"
+      src={src || '/claude-avatar.webp'}
+      alt={alt}
       className={cn('shrink-0', className)}
       style={{
         width: size,
