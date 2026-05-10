@@ -6,6 +6,7 @@ import {
   Cancel01Icon,
   Castle02Icon,
   Chat01Icon,
+  CheckListIcon,
   Clock01Icon,
   CommandLineIcon,
   DashboardSquare01Icon,
@@ -27,7 +28,10 @@ import {
   useChatSettingsStore,
 } from '@/hooks/use-chat-settings'
 
-export const MOBILE_HAMBURGER_NAV_ITEMS = [
+const HERMES_WORLD_ENABLED =
+  (import.meta as any).env?.VITE_HERMESWORLD_ENABLED !== '0'
+
+const MOBILE_HAMBURGER_NAV_ITEMS_BASE = [
   {
     id: 'chat',
     label: 'Chat',
@@ -62,6 +66,13 @@ export const MOBILE_HAMBURGER_NAV_ITEMS = [
     icon: Clock01Icon,
     to: '/jobs',
     match: (p: string) => p.startsWith('/jobs'),
+  },
+  {
+    id: 'tasks',
+    label: 'Kanban',
+    icon: CheckListIcon,
+    to: '/tasks',
+    match: (p: string) => p.startsWith('/tasks'),
   },
   {
     id: 'conductor',
@@ -114,6 +125,10 @@ export const MOBILE_HAMBURGER_NAV_ITEMS = [
     match: (p: string) => p.startsWith('/profiles'),
   },
 ]
+
+export const MOBILE_HAMBURGER_NAV_ITEMS = HERMES_WORLD_ENABLED
+  ? MOBILE_HAMBURGER_NAV_ITEMS_BASE
+  : MOBILE_HAMBURGER_NAV_ITEMS_BASE.filter((item) => item.id !== 'playground')
 
 /** Shared drawer state — used by both the trigger button and the drawer itself */
 let _setOpen: ((v: boolean) => void) | null = null

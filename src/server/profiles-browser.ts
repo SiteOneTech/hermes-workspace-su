@@ -3,7 +3,12 @@ import os from 'node:os'
 import path from 'node:path'
 import YAML from 'yaml'
 
-export type ProfileSummary = {
+export type ProfileIdentity = {
+  displayName?: string
+  avatarDataUrl?: string | null
+}
+
+export type ProfileSummary = ProfileIdentity & {
   name: string
   path: string
   active: boolean
@@ -16,7 +21,7 @@ export type ProfileSummary = {
   updatedAt?: string
 }
 
-export type ProfileDetail = {
+export type ProfileDetail = ProfileIdentity & {
   name: string
   path: string
   active: boolean
@@ -28,6 +33,11 @@ export type ProfileDetail = {
 }
 
 const PROFILE_NAME_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/
+const PROFILE_IDENTITY_FILE = '.hermes-workspace-profile.json'
+const PROFILE_DISPLAY_NAME_MAX_LENGTH = 50
+const PROFILE_AVATAR_MAX_LENGTH = 512 * 1024
+const PROFILE_AVATAR_RE =
+  /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/
 const TEXT_REWRITE_EXTENSIONS = new Set([
   '.md',
   '.txt',
@@ -62,6 +72,95 @@ export function getProfilesRoot(): string {
 
 function getActiveProfilePath(): string {
   return path.join(getClaudeRoot(), 'active_profile')
+}
+
+function getProfileRootByName(name: string, mode: 'read' | 'write'): string {
+  const normalized = name.trim() || 'default'
+  if (normalized === 'default') return getClaudeRoot()
+  const safeName =
+    mode === 'write'
+      ? validateProfileName(normalized)
+      : validateProfileIdentifier(normalized)
+  return path.join(getProfilesRoot(), safeName)
+}
+
+function getProfileIdentityPath(profilePath: string): string {
+  return path.join(profilePath, PROFILE_IDENTITY_FILE)
+}
+
+function normalizeProfileIdentity(value: unknown): ProfileIdentity {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  const record = value as Record<string, unknown>
+  const identity: ProfileIdentity = {}
+
+  if (typeof record.displayName === 'string') {
+    const displayName = record.displayName
+      .trim()
+      .slice(0, PROFILE_DISPLAY_NAME_MAX_LENGTH)
+    if (displayName) identity.displayName = displayName
+  }
+
+  if (record.avatarDataUrl === null) {
+    identity.avatarDataUrl = null
+  } else if (typeof record.avatarDataUrl === 'string') {
+    const avatarDataUrl = record.avatarDataUrl.trim()
+    if (
+      avatarDataUrl.length <= PROFILE_AVATAR_MAX_LENGTH &&
+      PROFILE_AVATAR_RE.test(avatarDataUrl)
+    ) {
+      identity.avatarDataUrl = avatarDataUrl
+    }
+  }
+
+  return identity
+}
+
+function readProfileIdentity(profilePath: string): ProfileIdentity {
+  const identityPath = getProfileIdentityPath(profilePath)
+  if (!fs.existsSync(identityPath)) return {}
+  try {
+    return normalizeProfileIdentity(JSON.parse(safeReadText(identityPath)))
+  } catch {
+    return {}
+  }
+}
+
+function writeProfileIdentity(
+  profilePath: string,
+  patch: ProfileIdentity,
+): void {
+  const identityPath = getProfileIdentityPath(profilePath)
+  const current = readProfileIdentity(profilePath)
+  const next: ProfileIdentity = { ...current }
+
+  if ('displayName' in patch) {
+    const displayName =
+      typeof patch.displayName === 'string'
+        ? patch.displayName.trim().slice(0, PROFILE_DISPLAY_NAME_MAX_LENGTH)
+        : ''
+    if (displayName) next.displayName = displayName
+    else delete next.displayName
+  }
+
+  if ('avatarDataUrl' in patch) {
+    if (patch.avatarDataUrl === null) {
+      delete next.avatarDataUrl
+    } else if (typeof patch.avatarDataUrl === 'string') {
+      const avatarDataUrl = patch.avatarDataUrl.trim()
+      if (avatarDataUrl.length > PROFILE_AVATAR_MAX_LENGTH) {
+        throw new Error('Avatar image is too large')
+      }
+      if (!PROFILE_AVATAR_RE.test(avatarDataUrl)) {
+        throw new Error(
+          'Avatar image must be a PNG, JPEG, WebP, or GIF data URL',
+        )
+      }
+      next.avatarDataUrl = avatarDataUrl
+    }
+  }
+
+  fs.mkdirSync(profilePath, { recursive: true })
+  fs.writeFileSync(identityPath, JSON.stringify(next, null, 2) + '\n', 'utf-8')
 }
 
 /**
@@ -189,6 +288,8 @@ export function listProfiles(): Array<ProfileSummary> {
       const skillsDir = path.join(profilePath, 'skills')
       const sessionsDir = path.join(profilePath, 'sessions')
       const config = readYamlConfig(configPath)
+      const identity = readProfileIdentity(profilePath)
+      const identityPath = getProfileIdentityPath(profilePath)
       const skillCount = countFilesRecursive(
         skillsDir,
         (full) => path.basename(full) === 'SKILL.md',
@@ -215,6 +316,7 @@ export function listProfiles(): Array<ProfileSummary> {
       }
       results.push({
         name,
+        ...identity,
         path: profilePath,
         active: name === activeProfile,
         exists: true,
@@ -229,12 +331,15 @@ export function listProfiles(): Array<ProfileSummary> {
           envPath,
           skillsDir,
           sessionsDir,
+          identityPath,
         ]),
       })
     }
   }
 
   const root = getClaudeRoot()
+  const defaultIdentity = readProfileIdentity(root)
+  const defaultIdentityPath = getProfileIdentityPath(root)
   const config = readYamlConfig(path.join(root, 'config.yaml'))
   // Resolve model/provider for default profile too
   let defaultModel: string | undefined
@@ -255,6 +360,7 @@ export function listProfiles(): Array<ProfileSummary> {
   }
   results.unshift({
     name: 'default',
+    ...defaultIdentity,
     path: root,
     active: activeProfile === 'default',
     exists: true,
@@ -268,7 +374,11 @@ export function listProfiles(): Array<ProfileSummary> {
       /\.(jsonl|json|sqlite|db)$/i.test(full),
     ),
     hasEnv: fs.existsSync(path.join(root, '.env')),
-    updatedAt: latestMtime([root, path.join(root, 'config.yaml')]),
+    updatedAt: latestMtime([
+      root,
+      path.join(root, 'config.yaml'),
+      defaultIdentityPath,
+    ]),
   })
 
   results.sort((a, b) => {
@@ -282,10 +392,7 @@ export function listProfiles(): Array<ProfileSummary> {
 export function readProfile(name: string): ProfileDetail {
   const active = getActiveProfileName()
   const normalized = name.trim() || 'default'
-  const profilePath =
-    normalized === 'default'
-      ? getClaudeRoot()
-      : path.join(getProfilesRoot(), validateProfileName(normalized))
+  const profilePath = getProfileRootByName(normalized, 'read')
   if (!fs.existsSync(profilePath)) throw new Error('Profile not found')
   const configPath = path.join(profilePath, 'config.yaml')
   const envPath = path.join(profilePath, '.env')
@@ -293,6 +400,7 @@ export function readProfile(name: string): ProfileDetail {
   const skillsDir = path.join(profilePath, 'skills')
   return {
     name: normalized,
+    ...readProfileIdentity(profilePath),
     path: profilePath,
     active: normalized === active,
     config: readYamlConfig(configPath),
@@ -391,10 +499,7 @@ export function updateProfileConfig(
   patch: Record<string, unknown>,
 ): ProfileDetail {
   const normalized = name.trim() || 'default'
-  const profilePath =
-    normalized === 'default'
-      ? getClaudeRoot()
-      : path.join(getProfilesRoot(), validateProfileName(normalized))
+  const profilePath = getProfileRootByName(normalized, 'write')
   if (!fs.existsSync(profilePath)) throw new Error('Profile not found')
   const configPath = path.join(profilePath, 'config.yaml')
   const current = readYamlConfig(configPath)
@@ -434,6 +539,27 @@ export function updateProfileConfig(
 
   fs.mkdirSync(path.dirname(configPath), { recursive: true })
   fs.writeFileSync(configPath, YAML.stringify(current), 'utf-8')
+  return readProfile(normalized)
+}
+
+export function updateProfileIdentity(
+  name: string,
+  patch: ProfileIdentity,
+): ProfileDetail {
+  const normalized = name.trim() || 'default'
+  const profilePath = getProfileRootByName(normalized, 'read')
+  if (!fs.existsSync(profilePath)) throw new Error('Profile not found')
+
+  const next: ProfileIdentity = {}
+  if ('displayName' in patch) {
+    next.displayName =
+      typeof patch.displayName === 'string' ? patch.displayName : ''
+  }
+  if ('avatarDataUrl' in patch) {
+    next.avatarDataUrl = patch.avatarDataUrl ?? null
+  }
+
+  writeProfileIdentity(profilePath, next)
   return readProfile(normalized)
 }
 

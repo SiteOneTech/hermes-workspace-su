@@ -12,6 +12,51 @@ const port = parseInt(process.env.PORT || '3000', 10)
 // on a LAN / Tailscale / public surface must opt in explicitly with
 // HOST=0.0.0.0 *and* set CLAUDE_PASSWORD (enforced below). See #122.
 const host = process.env.HOST || '127.0.0.1'
+const extraBindHosts = (process.env.EXTRA_BIND_HOSTS || '')
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean)
+
+const HERMES_WORLD_DISABLED_VALUES = new Set(['0', 'false', 'no', 'off', 'disabled'])
+const HERMES_WORLD_PATH_PREFIXES = [
+  '/hermes-world',
+  '/world',
+  '/playground',
+  '/reserve',
+  '/early-access',
+  '/api/hermesworld',
+  '/api/playground-admin',
+  '/api/playground-npc',
+  '/assets/hermesworld',
+]
+
+function isHermesWorldDisabled() {
+  const value = (
+    process.env.VITE_HERMESWORLD_ENABLED ||
+    process.env.HERMESWORLD_ENABLED ||
+    ''
+  )
+    .trim()
+    .toLowerCase()
+  return HERMES_WORLD_DISABLED_VALUES.has(value)
+}
+
+function isHermesWorldPath(pathname) {
+  return HERMES_WORLD_PATH_PREFIXES.some((prefix) => {
+    return pathname === prefix || pathname.startsWith(`${prefix}/`)
+  })
+}
+
+function blockHermesWorldIfDisabled(pathname, res) {
+  if (!isHermesWorldDisabled() || !isHermesWorldPath(pathname)) return false
+
+  res.writeHead(404, {
+    'Content-Type': 'text/plain; charset=utf-8',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  })
+  res.end('HermesWorld is disabled on this Zeus sidecar.')
+  return true
+}
 
 function isNonLoopbackHost(h) {
   if (!h) return false
@@ -22,7 +67,16 @@ function isNonLoopbackHost(h) {
   return true
 }
 
-if (isNonLoopbackHost(host)) {
+function getBindHosts() {
+  const hosts = [host, ...extraBindHosts]
+  if (host === '127.0.0.1') hosts.push('::1')
+  return [...new Set(hosts)]
+}
+
+const bindHosts = getBindHosts()
+const nonLoopbackHosts = bindHosts.filter(isNonLoopbackHost)
+
+if (nonLoopbackHosts.length > 0) {
   // Honor HERMES_PASSWORD (current name) with CLAUDE_PASSWORD as a back-compat
   // fallback for deployments configured pre-rename.
   const password = (
@@ -33,7 +87,8 @@ if (isNonLoopbackHost(host)) {
   if (!password) {
     console.error(
       '\n[workspace] refusing to start.\n' +
-        `  HOST is set to "${host}" (non-loopback), but HERMES_PASSWORD is unset.\n` +
+        `  Bind host(s) include non-loopback address(es): ${nonLoopbackHosts.join(', ')}.\n` +
+        '  HERMES_PASSWORD is unset.\n' +
         '  This would expose a high-privilege control plane (terminals, files, agents)\n' +
         '  to anyone who can reach the port. Either:\n' +
         '    • set HOST=127.0.0.1 for local-only access, or\n' +
@@ -167,6 +222,13 @@ async function tryServeStatic(req, res) {
 }
 
 async function requestHandler(req, res) {
+  const url = new URL(
+    req.url || '/',
+    `http://${req.headers.host || 'localhost'}`,
+  )
+
+  if (blockHermesWorldIfDisabled(url.pathname, res)) return
+
   // Try static files first (client assets)
   if (req.method === 'GET' || req.method === 'HEAD') {
     const served = await tryServeStatic(req, res)
@@ -174,10 +236,6 @@ async function requestHandler(req, res) {
   }
 
   // Fall through to SSR handler
-  const url = new URL(
-    req.url || '/',
-    `http://${req.headers.host || 'localhost'}`,
-  )
 
   const headers = new Headers()
   for (const [key, value] of Object.entries(req.headers)) {
@@ -241,13 +299,6 @@ function listenOn(bindHost) {
   return httpServer
 }
 
-listenOn(host)
-
-// Cloudflared remote-managed ingress currently points at http://localhost:10280.
-// On macOS, localhost may resolve to ::1 before 127.0.0.1; if Workspace only
-// listens on IPv4 loopback, tunneled requests intermittently fail with
-// `dial tcp [::1]:10280: connect: connection refused`. Keep the default
-// local-only security posture while also serving IPv6 loopback.
-if (host === '127.0.0.1') {
-  listenOn('::1')
+for (const bindHost of bindHosts) {
+  listenOn(bindHost)
 }

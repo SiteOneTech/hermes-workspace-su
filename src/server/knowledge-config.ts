@@ -14,10 +14,27 @@ const DEFAULT_CONFIG: KnowledgeBaseConfig = {
   source: { type: 'local', path: '' },
 }
 
+export function getHermesHome(): string {
+  return path.resolve(
+    process.env.HERMES_HOME ??
+      process.env.CLAUDE_HOME ??
+      path.join(os.homedir(), '.hermes'),
+  )
+}
+
+export function expandHomePath(input: string): string {
+  const value = input.trim()
+  if (value === '~') return os.homedir()
+  if (value.startsWith('~/')) return path.join(os.homedir(), value.slice(2))
+  return value
+}
+
+export function getDefaultLocalKnowledgeRoot(): string {
+  return path.join(getHermesHome(), 'knowledge')
+}
+
 function getConfigPath(): string {
-  const claudeHome =
-    process.env.HERMES_HOME ?? process.env.CLAUDE_HOME ?? path.join(os.homedir(), '.hermes')
-  return path.join(claudeHome, 'knowledge-config.json')
+  return path.join(getHermesHome(), 'knowledge-config.json')
 }
 
 export function readKnowledgeBaseConfig(): KnowledgeBaseConfig {
@@ -49,11 +66,20 @@ export function getKnowledgeBaseEffectiveRoot(): string {
   const config = readKnowledgeBaseConfig()
   if (config.source.type === 'local') {
     const p = config.source.path.trim()
-    if (p) return path.resolve(p.replace(/^~\//, os.homedir() + '/'))
+    if (p) return path.resolve(expandHomePath(p))
   }
-  // fallback: legacy env var or default
-  if (process.env.KNOWLEDGE_DIR) return path.resolve(process.env.KNOWLEDGE_DIR)
+
+  if (process.env.KNOWLEDGE_DIR)
+    return path.resolve(expandHomePath(process.env.KNOWLEDGE_DIR))
+
+  const hermesKnowledge = getDefaultLocalKnowledgeRoot()
+  if (fs.existsSync(hermesKnowledge)) return hermesKnowledge
+
   const claudeKnowledge = path.join(os.homedir(), '.claude', 'knowledge')
   if (fs.existsSync(claudeKnowledge)) return claudeKnowledge
-  return claudeKnowledge
+
+  const homeKnowledge = path.join(os.homedir(), 'knowledge', 'wiki')
+  if (fs.existsSync(homeKnowledge)) return homeKnowledge
+
+  return hermesKnowledge
 }

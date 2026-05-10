@@ -45,7 +45,10 @@ type TabItem = {
   match: (path: string) => boolean
 }
 
-export const MOBILE_NAV_TABS: Array<TabItem> = [
+const HERMES_WORLD_ENABLED =
+  (import.meta as any).env?.VITE_HERMESWORLD_ENABLED !== '0'
+
+const MOBILE_NAV_TABS_BASE: Array<TabItem> = [
   {
     id: 'dashboard',
     label: 'Home',
@@ -132,6 +135,10 @@ export const MOBILE_NAV_TABS: Array<TabItem> = [
     match: (p) => p.startsWith('/settings'),
   },
 ]
+
+export const MOBILE_NAV_TABS: Array<TabItem> = HERMES_WORLD_ENABLED
+  ? MOBILE_NAV_TABS_BASE
+  : MOBILE_NAV_TABS_BASE.filter((tab) => tab.id !== 'playground')
 
 export function MobileTabBar() {
   const navigate = useNavigate()

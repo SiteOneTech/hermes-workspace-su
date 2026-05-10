@@ -22,6 +22,8 @@ import { cn } from '@/lib/utils'
 
 type ProfileSummary = {
   name: string
+  displayName?: string
+  avatarDataUrl?: string | null
   path: string
   active: boolean
   exists: boolean
@@ -33,8 +35,13 @@ type ProfileSummary = {
   updatedAt?: string
 }
 
+const PROFILE_IMAGE_MAX_DIMENSION = 128
+const PROFILE_IMAGE_MAX_FILE_SIZE = 10 * 1024 * 1024
+
 type ProfileDetail = {
   name: string
+  displayName?: string
+  avatarDataUrl?: string | null
   path: string
   active: boolean
   config: Record<string, unknown>
@@ -105,6 +112,15 @@ export function ProfilesScreen() {
   const [createOpen, setCreateOpen] = useState(false)
   const [detailsName, setDetailsName] = useState<string | null>(null)
   const [renameTarget, setRenameTarget] = useState<ProfileSummary | null>(null)
+  const [identityTarget, setIdentityTarget] = useState<ProfileSummary | null>(
+    null,
+  )
+  const [identityDisplayName, setIdentityDisplayName] = useState('')
+  const [identityAvatarDataUrl, setIdentityAvatarDataUrl] = useState<
+    string | null
+  >(null)
+  const [identityError, setIdentityError] = useState<string | null>(null)
+  const [identityProcessing, setIdentityProcessing] = useState(false)
   const [newProfileName, setNewProfileName] = useState('')
   const [wizardStep, setWizardStep] = useState(1)
   const [cloneFrom, setCloneFrom] = useState('')
@@ -252,6 +268,97 @@ export function ProfilesScreen() {
     }
   }
 
+  function profileDisplayLabel(
+    profile: ProfileSummary | ProfileDetail,
+  ): string {
+    return profile.displayName?.trim() || profile.name
+  }
+
+  function openIdentityDialog(profile: ProfileSummary) {
+    setIdentityTarget(profile)
+    setIdentityDisplayName(profile.displayName?.trim() || '')
+    setIdentityAvatarDataUrl(profile.avatarDataUrl || null)
+    setIdentityError(null)
+  }
+
+  async function handleIdentityAvatarUpload(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setIdentityError('Unsupported file type.')
+      return
+    }
+    if (file.size > PROFILE_IMAGE_MAX_FILE_SIZE) {
+      setIdentityError('Image too large (max 10MB).')
+      return
+    }
+    setIdentityError(null)
+    setIdentityProcessing(true)
+    try {
+      const url = URL.createObjectURL(file)
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image()
+        i.onload = () => resolve(i)
+        i.onerror = () => reject(new Error('Failed to load image'))
+        i.src = url
+      })
+      const scale = Math.min(
+        1,
+        PROFILE_IMAGE_MAX_DIMENSION / Math.max(img.width, img.height),
+      )
+      const width = Math.round(img.width * scale)
+      const height = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('Canvas unavailable')
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0, width, height)
+      URL.revokeObjectURL(url)
+      const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+      setIdentityAvatarDataUrl(canvas.toDataURL(outputType, 0.82))
+    } catch {
+      setIdentityError('Failed to process image.')
+    } finally {
+      setIdentityProcessing(false)
+    }
+  }
+
+  async function handleSaveIdentity() {
+    if (!identityTarget) return
+    if (identityDisplayName.length > 50) {
+      setIdentityError('Display name too long (max 50 characters)')
+      return
+    }
+    setBusyName(identityTarget.name)
+    try {
+      await postJson('/api/profiles/update-identity', {
+        name: identityTarget.name,
+        displayName: identityDisplayName.trim(),
+        avatarDataUrl: identityAvatarDataUrl,
+      })
+      toast(`Updated ${identityDisplayName.trim() || identityTarget.name}`, {
+        type: 'success',
+      })
+      setIdentityTarget(null)
+      setIdentityDisplayName('')
+      setIdentityAvatarDataUrl(null)
+      setIdentityError(null)
+      await refreshProfiles()
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : 'Failed to update identity',
+        { type: 'error' },
+      )
+    } finally {
+      setBusyName(null)
+    }
+  }
+
   async function handleRename() {
     if (!renameTarget || !renameValue.trim()) return
     setBusyName(renameTarget.name)
@@ -320,8 +427,8 @@ export function ProfilesScreen() {
                     )}
                   >
                     <img
-                      src="/claude-avatar.webp"
-                      alt={profile.name}
+                      src={profile.avatarDataUrl || '/claude-avatar.webp'}
+                      alt={profileDisplayLabel(profile)}
                       className={cn(
                         'size-20 rounded-full border-2 object-cover',
                         profile.active
@@ -352,8 +459,13 @@ export function ProfilesScreen() {
 
                 {/* Name + provider */}
                 <h2 className="mt-3 text-center text-lg font-bold text-primary-900 dark:text-neutral-100">
-                  {profile.name}
+                  {profileDisplayLabel(profile)}
                 </h2>
+                {profile.displayName ? (
+                  <span className="mt-1 text-[11px] font-medium text-primary-400 dark:text-neutral-500">
+                    profile id: {profile.name}
+                  </span>
+                ) : null}
                 <span className="mt-1 inline-block rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-medium text-primary-600 dark:bg-neutral-800 dark:text-neutral-400">
                   {profile.provider || 'no provider'}
                 </span>
@@ -415,8 +527,12 @@ export function ProfilesScreen() {
                 <button
                   type="button"
                   onClick={() => {
-                    setRenameTarget(profile)
-                    setRenameValue(profile.name)
+                    if (profile.name === 'default') {
+                      openIdentityDialog(profile)
+                    } else {
+                      setRenameTarget(profile)
+                      setRenameValue(profile.name)
+                    }
                   }}
                   className="flex flex-1 items-center justify-center gap-1.5 border-r border-primary-200 py-2.5 text-xs font-semibold text-primary-700 transition-colors hover:bg-primary-100 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900"
                 >
@@ -425,7 +541,7 @@ export function ProfilesScreen() {
                     size={13}
                     strokeWidth={1.8}
                   />{' '}
-                  Rename
+                  {profile.name === 'default' ? 'Identity' : 'Rename'}
                 </button>
                 <button
                   type="button"
@@ -608,8 +724,8 @@ export function ProfilesScreen() {
                     </div>
                   ) : allModels.length === 0 ? (
                     <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
-                      No models found. Make sure Hermes Agent is running and
-                      has models configured.
+                      No models found. Make sure Hermes Agent is running and has
+                      models configured.
                     </div>
                   ) : (
                     <select
@@ -822,6 +938,128 @@ export function ProfilesScreen() {
       </DialogRoot>
 
       <DialogRoot
+        open={Boolean(identityTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIdentityTarget(null)
+            setIdentityDisplayName('')
+            setIdentityAvatarDataUrl(null)
+            setIdentityError(null)
+          }
+        }}
+      >
+        <DialogContent className="w-[min(480px,94vw)] max-w-none p-0">
+          <div className="border-b border-primary-200 px-6 pb-4 pt-5 dark:border-neutral-800">
+            <div className="flex items-center gap-3">
+              <img
+                src={identityAvatarDataUrl || '/claude-avatar.webp'}
+                alt={identityDisplayName || identityTarget?.name || 'Profile'}
+                className="size-12 rounded-full border-2 border-primary-200 object-cover dark:border-neutral-700"
+              />
+              <div>
+                <DialogTitle className="text-base font-semibold">
+                  Profile identity
+                </DialogTitle>
+                <p className="mt-0.5 text-xs text-primary-500 dark:text-neutral-400">
+                  Visual alias for{' '}
+                  <span className="font-mono font-semibold">
+                    {identityTarget?.name}
+                  </span>
+                  . Runtime profile id is not renamed.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4 px-6 py-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-neutral-400">
+                Display name
+              </label>
+              <Input
+                value={identityDisplayName}
+                onChange={(e) => setIdentityDisplayName(e.target.value)}
+                placeholder={identityTarget?.name || 'default'}
+                className="h-11 text-sm"
+                maxLength={50}
+                autoFocus
+              />
+              <p className="text-xs text-primary-400 dark:text-neutral-500">
+                Use this for labels in the Workspace UI. Leave blank to show the
+                profile id.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-neutral-400">
+                Avatar
+              </label>
+              <div className="flex items-center gap-3">
+                <img
+                  src={identityAvatarDataUrl || '/claude-avatar.webp'}
+                  alt={identityDisplayName || identityTarget?.name || 'Profile'}
+                  className="size-16 rounded-full border-2 border-primary-200 object-cover dark:border-neutral-700"
+                />
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleIdentityAvatarUpload}
+                    disabled={identityProcessing}
+                    aria-label="Upload profile avatar"
+                    className="block max-w-[15rem] cursor-pointer text-xs text-primary-700 dark:text-neutral-300 file:mr-2 file:cursor-pointer file:rounded-lg file:border file:border-primary-200 file:bg-primary-100 file:px-2.5 file:py-1.5 file:text-xs file:font-medium file:text-primary-900 file:transition-colors hover:file:bg-primary-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIdentityAvatarDataUrl(null)}
+                    disabled={!identityAvatarDataUrl || identityProcessing}
+                    className="h-8 w-fit rounded-lg border-primary-200 px-3"
+                  >
+                    Remove avatar
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-primary-400 dark:text-neutral-500">
+                Images are resized to 128px and stored in UI metadata, not in
+                Hermes runtime config.
+              </p>
+            </div>
+
+            {identityError ? (
+              <p className="text-xs text-red-600" role="alert">
+                {identityError}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex justify-end gap-2 border-t border-primary-200 px-6 py-3 dark:border-neutral-800">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIdentityTarget(null)
+                setIdentityDisplayName('')
+                setIdentityAvatarDataUrl(null)
+                setIdentityError(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => void handleSaveIdentity()}
+              disabled={
+                !identityTarget ||
+                identityProcessing ||
+                busyName === identityTarget?.name
+              }
+            >
+              Save identity
+            </Button>
+          </div>
+        </DialogContent>
+      </DialogRoot>
+
+      <DialogRoot
         open={Boolean(detailsName)}
         onOpenChange={(open) => !open && setDetailsName(null)}
       >
@@ -830,13 +1068,22 @@ export function ProfilesScreen() {
           <div className="shrink-0 border-b border-primary-200 px-6 pb-4 pt-5 dark:border-neutral-800">
             <div className="flex items-center gap-3">
               <img
-                src="/claude-avatar.webp"
-                alt={detailsName || ''}
+                src={
+                  detailQuery.data?.profile?.avatarDataUrl ||
+                  '/claude-avatar.webp'
+                }
+                alt={
+                  detailQuery.data?.profile
+                    ? profileDisplayLabel(detailQuery.data.profile)
+                    : detailsName || ''
+                }
                 className="size-12 rounded-full border-2 border-primary-200 object-cover dark:border-neutral-700"
               />
               <div className="min-w-0">
                 <DialogTitle className="text-base font-semibold">
-                  {detailsName}
+                  {detailQuery.data?.profile
+                    ? profileDisplayLabel(detailQuery.data.profile)
+                    : detailsName}
                 </DialogTitle>
                 <p className="mt-0.5 text-xs text-primary-500 dark:text-neutral-400">
                   Profile details &amp; configuration
@@ -851,7 +1098,11 @@ export function ProfilesScreen() {
               <div className="space-y-4 text-sm">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <DetailField
-                    label="Name"
+                    label="Display name"
+                    value={profileDisplayLabel(detailQuery.data.profile)}
+                  />
+                  <DetailField
+                    label="Profile id"
                     value={detailQuery.data.profile.name}
                   />
                   <DetailField
