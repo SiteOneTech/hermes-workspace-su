@@ -92,6 +92,13 @@ const MOBILE_NAV_TABS_BASE: Array<TabItem> = [
     match: (p) => p.startsWith('/jobs'),
   },
   {
+    id: 'workflows',
+    label: 'Flows',
+    icon: Building01Icon,
+    to: '/workflows',
+    match: (p) => p.startsWith('/workflows'),
+  },
+  {
     id: 'swarm',
     label: 'Swarm',
     icon: UserGroupIcon,

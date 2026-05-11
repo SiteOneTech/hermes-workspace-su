@@ -7,6 +7,7 @@ import {
   ArrowDown01Icon,
   ArrowUp01Icon,
   BrainIcon,
+  Building01Icon,
   Chat01Icon,
   CommandLineIcon,
   File01Icon,
@@ -193,6 +194,15 @@ export function CommandPalette({ pathname, sessions }: CommandPaletteProps) {
         shortcut: 'Go',
         icon: CommandLineIcon,
         onSelect: () => void navigate({ to: '/terminal' }),
+      },
+      {
+        id: 'screen-workflows',
+        group: 'Screens',
+        label: 'Workflows',
+        keywords: 'orchestration zeus factory scrum workflow runs kanban',
+        shortcut: 'Go',
+        icon: Building01Icon,
+        onSelect: () => void navigate({ to: '/workflows' }),
       },
       {
         id: 'screen-memory',

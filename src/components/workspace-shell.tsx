@@ -95,15 +95,17 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
   const getTabIndex = useCallback((path: string): number => {
     if (path === '/dashboard') return 0
     if (path.startsWith('/chat') || path === '/new' || path === '/') return 1
-    if (path.startsWith('/files')) return 2
-    if (path.startsWith('/terminal')) return 3
-    if (path.startsWith('/jobs')) return 4
-    if (path === '/swarm' || path.startsWith('/swarm2')) return 5
-    if (path.startsWith('/memory')) return 6
-    if (path.startsWith('/skills')) return 7
-    if (path.startsWith('/mcp')) return 8
-    if (path.startsWith('/profiles')) return 9
-    if (path.startsWith('/settings')) return 10
+    if (path.startsWith('/playground')) return 2
+    if (path.startsWith('/files')) return 3
+    if (path.startsWith('/terminal')) return 4
+    if (path.startsWith('/jobs')) return 5
+    if (path.startsWith('/workflows')) return 6
+    if (path === '/swarm' || path.startsWith('/swarm2')) return 7
+    if (path.startsWith('/memory')) return 8
+    if (path.startsWith('/skills')) return 9
+    if (path.startsWith('/mcp')) return 10
+    if (path.startsWith('/profiles')) return 11
+    if (path.startsWith('/settings')) return 12
     return -1
   }, [])
 
@@ -171,9 +173,11 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     if (pathname.startsWith('/files')) return 'Files'
     if (pathname.startsWith('/jobs')) return 'Jobs'
     if (pathname.startsWith('/tasks')) return 'Kanban'
+    if (pathname.startsWith('/workflows')) return 'Workflows'
     if (pathname.startsWith('/conductor')) return 'Conductor'
     if (pathname.startsWith('/operations')) return 'Operations'
-    if (pathname.startsWith('/swarm2') || pathname === '/swarm') return 'Swarm'
+    if (pathname.startsWith('/swarm2') || pathname === '/swarm')
+      return 'Local Swarm'
     if (pathname.startsWith('/memory')) return 'Memory'
     if (pathname.startsWith('/skills')) return 'Skills'
     if (pathname.startsWith('/mcp')) return 'MCP'

@@ -20,6 +20,17 @@ describe('swarm2 navigation alias handling', () => {
     expect(kanban?.label).toBe('Kanban')
   })
 
+  it('shows the canonical workflow view separately from local swarm', () => {
+    const workflows = MOBILE_HAMBURGER_NAV_ITEMS.find(
+      (item) => item.id === 'workflows',
+    )
+    const flowTab = MOBILE_NAV_TABS.find((item) => item.id === 'workflows')
+
+    expect(workflows?.to).toBe('/workflows')
+    expect(workflows?.label).toBe('Workflows')
+    expect(flowTab?.to).toBe('/workflows')
+  })
+
   it('keeps /swarm as the only user-visible swarm entry in the mobile hamburger menu', () => {
     const swarm = MOBILE_HAMBURGER_NAV_ITEMS.find((item) => item.id === 'swarm')
     const swarm2 = MOBILE_HAMBURGER_NAV_ITEMS.find(
@@ -27,6 +38,7 @@ describe('swarm2 navigation alias handling', () => {
     )
 
     expect(swarm?.to).toBe('/swarm')
+    expect(swarm?.label).toBe('Local Swarm')
     expect(swarm2).toBeUndefined()
   })
 

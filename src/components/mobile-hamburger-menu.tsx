@@ -73,6 +73,13 @@ const MOBILE_HAMBURGER_NAV_ITEMS_BASE = [
     match: (p: string) => p.startsWith('/tasks'),
   },
   {
+    id: 'workflows',
+    label: 'Workflows',
+    icon: Building01Icon,
+    to: '/workflows',
+    match: (p: string) => p.startsWith('/workflows'),
+  },
+  {
     id: 'conductor',
     label: 'Conductor',
     icon: Rocket01Icon,
@@ -88,7 +95,7 @@ const MOBILE_HAMBURGER_NAV_ITEMS_BASE = [
   },
   {
     id: 'swarm',
-    label: 'Swarm',
+    label: 'Local Swarm',
     icon: UserGroupIcon,
     to: '/swarm',
     match: (p: string) => p === '/swarm' || p.startsWith('/swarm2'),

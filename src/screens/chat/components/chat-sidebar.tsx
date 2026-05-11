@@ -585,6 +585,7 @@ function ChatSidebarComponent({
   const isJobsActive = pathname === '/jobs'
   const isMemoryActive = pathname === '/memory'
   const isTasksActive = pathname === '/tasks'
+  const isWorkflowsActive = pathname === '/workflows'
   const isConductorActive = pathname === '/conductor'
   const isOperationsActive = pathname === '/operations'
   const isSwarmActive = pathname === '/swarm' || pathname === '/swarm2'
@@ -827,6 +828,13 @@ function ChatSidebarComponent({
     },
     {
       kind: 'link',
+      to: '/workflows',
+      icon: Building01Icon,
+      label: 'Workflows',
+      active: isWorkflowsActive,
+    },
+    {
+      kind: 'link',
       to: '/conductor',
       icon: Rocket01Icon,
       label: 'Conductor',
@@ -843,7 +851,7 @@ function ChatSidebarComponent({
       kind: 'link',
       to: '/swarm',
       icon: UserGroupIcon,
-      label: 'Swarm',
+      label: 'Local Swarm',
       active: isSwarmActive,
     },
   ]

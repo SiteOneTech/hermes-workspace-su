@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorldRouteImport } from './routes/world'
+import { Route as WorkflowsRouteImport } from './routes/workflows'
 import { Route as VtCapitalRouteImport } from './routes/vt-capital'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as TasksRouteImport } from './routes/tasks'
@@ -79,6 +80,7 @@ import { Route as ApiPlaygroundNpcRouteImport } from './routes/api/playground-np
 import { Route as ApiPlaygroundAdminRouteImport } from './routes/api/playground-admin'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as ApiPathsRouteImport } from './routes/api/paths'
+import { Route as ApiOrchestrationRouteImport } from './routes/api/orchestration'
 import { Route as ApiModelsRouteImport } from './routes/api/models'
 import { Route as ApiMemoryRouteImport } from './routes/api/memory'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
@@ -157,6 +159,11 @@ import { Route as ApiHermesworldReservationsConfirmRouteImport } from './routes/
 const WorldRoute = WorldRouteImport.update({
   id: '/world',
   path: '/world',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkflowsRoute = WorkflowsRouteImport.update({
+  id: '/workflows',
+  path: '/workflows',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VtCapitalRoute = VtCapitalRouteImport.update({
@@ -503,6 +510,11 @@ const ApiPingRoute = ApiPingRouteImport.update({
 const ApiPathsRoute = ApiPathsRouteImport.update({
   id: '/api/paths',
   path: '/api/paths',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOrchestrationRoute = ApiOrchestrationRouteImport.update({
+  id: '/api/orchestration',
+  path: '/api/orchestration',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiModelsRoute = ApiModelsRouteImport.update({
@@ -904,6 +916,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
   '/vt-capital': typeof VtCapitalRoute
+  '/workflows': typeof WorkflowsRoute
   '/world': typeof WorldRoute
   '/api/artifacts': typeof ApiArtifactsRouteWithChildren
   '/api/auth': typeof ApiAuthRoute
@@ -931,6 +944,7 @@ export interface FileRoutesByFullPath {
   '/api/media': typeof ApiMediaRoute
   '/api/memory': typeof ApiMemoryRouteWithChildren
   '/api/models': typeof ApiModelsRoute
+  '/api/orchestration': typeof ApiOrchestrationRoute
   '/api/paths': typeof ApiPathsRoute
   '/api/ping': typeof ApiPingRoute
   '/api/playground-admin': typeof ApiPlaygroundAdminRoute
@@ -1049,6 +1063,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
   '/vt-capital': typeof VtCapitalRoute
+  '/workflows': typeof WorkflowsRoute
   '/world': typeof WorldRoute
   '/api/artifacts': typeof ApiArtifactsRouteWithChildren
   '/api/auth': typeof ApiAuthRoute
@@ -1076,6 +1091,7 @@ export interface FileRoutesByTo {
   '/api/media': typeof ApiMediaRoute
   '/api/memory': typeof ApiMemoryRouteWithChildren
   '/api/models': typeof ApiModelsRoute
+  '/api/orchestration': typeof ApiOrchestrationRoute
   '/api/paths': typeof ApiPathsRoute
   '/api/ping': typeof ApiPingRoute
   '/api/playground-admin': typeof ApiPlaygroundAdminRoute
@@ -1196,6 +1212,7 @@ export interface FileRoutesById {
   '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
   '/vt-capital': typeof VtCapitalRoute
+  '/workflows': typeof WorkflowsRoute
   '/world': typeof WorldRoute
   '/api/artifacts': typeof ApiArtifactsRouteWithChildren
   '/api/auth': typeof ApiAuthRoute
@@ -1223,6 +1240,7 @@ export interface FileRoutesById {
   '/api/media': typeof ApiMediaRoute
   '/api/memory': typeof ApiMemoryRouteWithChildren
   '/api/models': typeof ApiModelsRoute
+  '/api/orchestration': typeof ApiOrchestrationRoute
   '/api/paths': typeof ApiPathsRoute
   '/api/ping': typeof ApiPingRoute
   '/api/playground-admin': typeof ApiPlaygroundAdminRoute
@@ -1344,6 +1362,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/terminal'
     | '/vt-capital'
+    | '/workflows'
     | '/world'
     | '/api/artifacts'
     | '/api/auth'
@@ -1371,6 +1390,7 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/api/memory'
     | '/api/models'
+    | '/api/orchestration'
     | '/api/paths'
     | '/api/ping'
     | '/api/playground-admin'
@@ -1489,6 +1509,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/terminal'
     | '/vt-capital'
+    | '/workflows'
     | '/world'
     | '/api/artifacts'
     | '/api/auth'
@@ -1516,6 +1537,7 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/api/memory'
     | '/api/models'
+    | '/api/orchestration'
     | '/api/paths'
     | '/api/ping'
     | '/api/playground-admin'
@@ -1635,6 +1657,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/terminal'
     | '/vt-capital'
+    | '/workflows'
     | '/world'
     | '/api/artifacts'
     | '/api/auth'
@@ -1662,6 +1685,7 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/api/memory'
     | '/api/models'
+    | '/api/orchestration'
     | '/api/paths'
     | '/api/ping'
     | '/api/playground-admin'
@@ -1782,6 +1806,7 @@ export interface RootRouteChildren {
   TasksRoute: typeof TasksRoute
   TerminalRoute: typeof TerminalRoute
   VtCapitalRoute: typeof VtCapitalRoute
+  WorkflowsRoute: typeof WorkflowsRoute
   WorldRoute: typeof WorldRoute
   ApiArtifactsRoute: typeof ApiArtifactsRouteWithChildren
   ApiAuthRoute: typeof ApiAuthRoute
@@ -1809,6 +1834,7 @@ export interface RootRouteChildren {
   ApiMediaRoute: typeof ApiMediaRoute
   ApiMemoryRoute: typeof ApiMemoryRouteWithChildren
   ApiModelsRoute: typeof ApiModelsRoute
+  ApiOrchestrationRoute: typeof ApiOrchestrationRoute
   ApiPathsRoute: typeof ApiPathsRoute
   ApiPingRoute: typeof ApiPingRoute
   ApiPlaygroundAdminRoute: typeof ApiPlaygroundAdminRoute
@@ -1885,6 +1911,13 @@ declare module '@tanstack/react-router' {
       path: '/world'
       fullPath: '/world'
       preLoaderRoute: typeof WorldRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workflows': {
+      id: '/workflows'
+      path: '/workflows'
+      fullPath: '/workflows'
+      preLoaderRoute: typeof WorkflowsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vt-capital': {
@@ -2368,6 +2401,13 @@ declare module '@tanstack/react-router' {
       path: '/api/paths'
       fullPath: '/api/paths'
       preLoaderRoute: typeof ApiPathsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/orchestration': {
+      id: '/api/orchestration'
+      path: '/api/orchestration'
+      fullPath: '/api/orchestration'
+      preLoaderRoute: typeof ApiOrchestrationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/models': {
@@ -3100,6 +3140,7 @@ const rootRouteChildren: RootRouteChildren = {
   TasksRoute: TasksRoute,
   TerminalRoute: TerminalRoute,
   VtCapitalRoute: VtCapitalRoute,
+  WorkflowsRoute: WorkflowsRoute,
   WorldRoute: WorldRoute,
   ApiArtifactsRoute: ApiArtifactsRouteWithChildren,
   ApiAuthRoute: ApiAuthRoute,
@@ -3127,6 +3168,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMediaRoute: ApiMediaRoute,
   ApiMemoryRoute: ApiMemoryRouteWithChildren,
   ApiModelsRoute: ApiModelsRoute,
+  ApiOrchestrationRoute: ApiOrchestrationRoute,
   ApiPathsRoute: ApiPathsRoute,
   ApiPingRoute: ApiPingRoute,
   ApiPlaygroundAdminRoute: ApiPlaygroundAdminRoute,
