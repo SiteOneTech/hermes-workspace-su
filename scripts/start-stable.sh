@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# Non-interactive system shells do not always include the node toolchain that
+# the Hermes installer places under the profile home.
+export PATH="$HOME/.local/bin:$HOME/.hermes/node/bin:$PATH"
+
 # Load workspace configuration before deriving runtime settings or building.
 # Services and non-interactive shells often do not export the .env values, which
 # can leave the stable launcher without Hermes API/dashboard tokens or URLs.
