@@ -19,6 +19,7 @@ import {
   fetchWorkflowJson,
   formatWorkflowDate,
   labelWorkflowStatus,
+  workflowRunDescription,
   type DetailResponse,
   type OverviewResponse,
   type WorkflowDefinition,
@@ -67,6 +68,7 @@ export function WorkflowsScreen() {
   const selectedDefinition = selectedRun
     ? definitionsById.get(selectedRun.workflow_definition_id)
     : null
+  const selectedDescription = workflowRunDescription(selectedRun)
   const steps = detail?.steps.steps ?? []
   const workOrders = detail?.work_orders.work_orders ?? []
   const events = detail?.timeline.events ?? []
@@ -239,6 +241,9 @@ export function WorkflowsScreen() {
                             {definition?.display_name ??
                               run.workflow_definition_id}
                           </p>
+                          <p className="mt-1 line-clamp-2 text-xs text-[var(--theme-muted-2)]">
+                            {workflowRunDescription(run)}
+                          </p>
                         </div>
                         <StatusBadge value={run.status} />
                       </div>
@@ -283,6 +288,10 @@ export function WorkflowsScreen() {
                         {selectedDefinition?.display_name ??
                           selectedRun.workflow_definition_id}{' '}
                         v{selectedRun.workflow_version}
+                      </p>
+                      <p className="mt-3 max-w-3xl text-sm text-[var(--theme-muted-2)]">
+                        {selectedDescription ||
+                          'This workflow was created before functional descriptions were required.'}
                       </p>
                     </div>
                     <StatusBadge value={selectedRun.status} />

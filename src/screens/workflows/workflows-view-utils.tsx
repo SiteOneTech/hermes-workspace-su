@@ -35,6 +35,7 @@ export type WorkflowRun = {
   workflow_definition_id: string
   workflow_version: string
   title: string
+  description?: string
   status: string
   current_step_id?: string | null
   created_by: string
@@ -159,6 +160,19 @@ export function compactWorkflowId(value: string): string {
 
 export function labelWorkflowStatus(value: string): string {
   return value.replaceAll('_', ' ')
+}
+
+export function workflowRunDescription(
+  run: WorkflowRun | null | undefined,
+): string {
+  if (!run) return ''
+  if (typeof run.description === 'string' && run.description.trim()) {
+    return run.description.trim()
+  }
+  const metadataDescription = run.metadata?.functional_description
+  return typeof metadataDescription === 'string'
+    ? metadataDescription.trim()
+    : ''
 }
 
 function statusClass(value: string): string {
