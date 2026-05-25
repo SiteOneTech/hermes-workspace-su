@@ -35,12 +35,16 @@ import type {
   SlashCommandMenuHandle,
 } from '@/components/slash-command-menu'
 import {
+  DEFAULT_SLASH_COMMANDS,
+  mergeSlashCommands,
+  SlashCommandMenu,
+} from '@/components/slash-command-menu'
+import {
   PromptInput,
   PromptInputAction,
   PromptInputActions,
   PromptInputTextarea,
 } from '@/components/prompt-kit/prompt-input'
-import { SlashCommandMenu } from '@/components/slash-command-menu'
 import { useSettings } from '@/hooks/use-settings'
 import { MOBILE_TAB_BAR_OFFSET } from '@/components/mobile-tab-bar'
 import { useWorkspaceStore } from '@/stores/workspace-store'
@@ -159,6 +163,10 @@ type WorkspaceDetectionResponse = {
   last?: string
 }
 
+type ClaudeConfigApiResponse = {
+  config?: Record<string, unknown>
+}
+
 type ModelInfoApiResponse = {
   gatewayMode?: string | null
   supportsRuntimeSwitching?: boolean | null
@@ -205,6 +213,39 @@ type ClaudeAvailableModelsResponse = {
   provider: string
   models: Array<{ id: string; description: string }>
   providers: Array<ClaudeProviderOption>
+}
+
+type InstalledSkillSummary = {
+  id: string
+  name: string
+  description: string
+  installed: boolean
+  enabled: boolean
+}
+
+async function fetchInstalledSkills(): Promise<Array<InstalledSkillSummary>> {
+  const response = await fetch('/api/skills?tab=installed&limit=120')
+  if (!response.ok) {
+    throw new Error(`Skills request failed (${response.status})`)
+  }
+
+  const payload = (await response.json()) as {
+    skills?: Array<Record<string, unknown>>
+    ok?: boolean
+  }
+  const skills = Array.isArray(payload.skills) ? payload.skills : []
+
+  return skills
+    .map((entry) => {
+      const id = readModelText(entry.id) || readModelText(entry.slug) || readModelText(entry.name)
+      if (!id) return null
+      const name = readModelText(entry.name) || id
+      const description = readModelText(entry.description)
+      const installed = entry.installed !== false
+      const enabled = entry.enabled !== false
+      return { id, name, description, installed, enabled }
+    })
+    .filter((entry): entry is InstalledSkillSummary => entry !== null)
 }
 
 async function fetchModels(): Promise<{
@@ -680,12 +721,15 @@ async function readResponseError(response: Response): Promise<string> {
   }
 }
 
-async function fetchCurrentModelFromStatus(): Promise<string> {
+async function fetchCurrentModelFromStatus(sessionKey?: string): Promise<string> {
   const controller = new AbortController()
   const timeout = globalThis.setTimeout(() => controller.abort(), 7000)
 
   try {
-    const response = await fetch('/api/session-status', {
+    const query = sessionKey?.trim()
+      ? `?sessionKey=${encodeURIComponent(sessionKey.trim())}`
+      : ''
+    const response = await fetch(`/api/session-status${query}`, {
       signal: controller.signal,
     })
     if (!response.ok) {
@@ -921,9 +965,21 @@ function ChatComposerComponent({
     },
   })
   const currentModelQuery = useQuery({
-    queryKey: ['claude', 'session-status-model'],
-    queryFn: fetchCurrentModelFromStatus,
+    queryKey: ['claude', 'session-status-model', sessionKey || 'main'],
+    queryFn: () => fetchCurrentModelFromStatus(sessionKey),
     refetchInterval: 30_000,
+    retry: false,
+  })
+  const sttConfigQuery = useQuery({
+    queryKey: ['claude', 'config', 'stt'],
+    queryFn: async () => {
+      const response = await fetch('/api/claude-config')
+      if (!response.ok) {
+        throw new Error(`Config request failed (${response.status})`)
+      }
+      return (await response.json()) as ClaudeConfigApiResponse
+    },
+    staleTime: 60_000,
     retry: false,
   })
   const gatewayModeQuery = useQuery({
@@ -948,6 +1004,12 @@ function ChatComposerComponent({
     queryFn: fetchProfiles,
     retry: false,
     staleTime: 15_000,
+  })
+  const installedSkillsQuery = useQuery({
+    queryKey: ['chat', 'composer', 'installed-skills'],
+    queryFn: fetchInstalledSkills,
+    retry: false,
+    staleTime: 60_000,
   })
   const workspaceContextQuery = useQuery({
     queryKey: ['workspace', 'composer-context'],
@@ -1609,6 +1671,19 @@ function ChatComposerComponent({
   const promptPlaceholder = isMobileViewport
     ? 'Message...'
     : 'Ask anything... (↵ to send · ⇧↵ new line · ⌘⇧M switch model)'
+  const slashCommands = useMemo(
+    () =>
+      mergeSlashCommands(
+        DEFAULT_SLASH_COMMANDS,
+        (installedSkillsQuery.data ?? [])
+          .filter((skill) => skill.installed && skill.enabled)
+          .map((skill) => ({
+            command: `/${skill.id}`,
+            description: skill.description || `Run ${skill.name}`,
+          })),
+      ),
+    [installedSkillsQuery.data],
+  )
   const slashCommandQuery = useMemo(() => readSlashCommandQuery(value), [value])
   const isSlashMenuOpen =
     slashCommandQuery !== null && !disabled && !isSlashMenuDismissed
@@ -1620,18 +1695,66 @@ function ChatComposerComponent({
   const _isWebSearchActive = webSearchEnabled ?? isWebSearchMode
   void _isWebSearchActive // retained for future use / external prop
 
+  const sttConfig =
+    (sttConfigQuery.data?.config?.stt as Record<string, unknown> | undefined) || {}
+  const sttProvider =
+    typeof sttConfig.provider === 'string' ? sttConfig.provider.trim() : 'local'
+  const useRemoteStt = sttProvider === 'groq' || sttProvider === 'openai'
+
+  const appendTextToDraft = useCallback(
+    (text: string, separator = ' ') => {
+      const normalized = text.trim()
+      if (!normalized) return
+      setValue((prev) => {
+        const next = prev.trim().length > 0 ? `${prev}${separator}${normalized}` : normalized
+        persistDraft(next)
+        return next
+      })
+    },
+    [persistDraft],
+  )
+
+  const transcribeVoiceBlob = useCallback(
+    async (blob: Blob) => {
+      if (!useRemoteStt) {
+        throw new Error('Remote STT is not enabled for this profile.')
+      }
+
+      const form = new FormData()
+      const extension = blob.type.includes('mp4') ? 'mp4' : 'webm'
+      form.set('file', blob, `voice-input.${extension}`)
+
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: form,
+      })
+      const payload = (await response.json().catch(() => ({}))) as {
+        ok?: boolean
+        text?: string
+        error?: string
+      }
+      if (!response.ok || payload.ok === false) {
+        throw new Error(payload.error || `Transcription failed (${response.status})`)
+      }
+      return typeof payload.text === 'string' ? payload.text : ''
+    },
+    [useRemoteStt],
+  )
+
   // Voice input (tap = speech-to-text)
   const voiceInput = useVoiceInput({
+    transcribe: useRemoteStt ? transcribeVoiceBlob : undefined,
     onResult: useCallback(
       (text: string) => {
-        if (!text.trim()) return
-        setValue((prev) => {
-          const next = prev.trim().length > 0 ? `${prev} ${text}` : text
-          persistDraft(next)
-          return next
-        })
+        appendTextToDraft(text)
       },
-      [persistDraft],
+      [appendTextToDraft],
+    ),
+    onError: useCallback(
+      (error: string) => {
+        toast(error || 'Voice transcription failed', { type: 'error' })
+      },
+      [],
     ),
   })
 
@@ -1657,18 +1780,27 @@ function ChatComposerComponent({
               previewUrl: '',
             },
           ])
-          // Auto-add duration caption to message
-          setValue((prev) => {
-            const caption = `🎤 Voice note (${secs}s)`
-            const next =
-              prev.trim().length > 0 ? `${prev}\n${caption}` : caption
-            persistDraft(next)
-            return next
-          })
+          appendTextToDraft(`🎤 Voice note (${secs}s)`, '\n')
+          if (useRemoteStt) {
+            void transcribeVoiceBlob(blob)
+              .then((text) => {
+                if (text.trim()) {
+                  appendTextToDraft(`Transcript: ${text.trim()}`, '\n')
+                }
+              })
+              .catch((error) => {
+                toast(
+                  error instanceof Error
+                    ? error.message
+                    : 'Voice note transcription failed',
+                  { type: 'error' },
+                )
+              })
+          }
         }
         reader.readAsDataURL(blob)
       },
-      [persistDraft],
+      [appendTextToDraft, transcribeVoiceBlob, useRemoteStt],
     ),
   })
 
@@ -2000,6 +2132,7 @@ function ChatComposerComponent({
           ref={slashMenuRef}
           open={isSlashMenuOpen}
           query={slashCommandQuery ?? ''}
+          commands={slashCommands}
           onSelect={handleSelectSlashCommand}
         />
 

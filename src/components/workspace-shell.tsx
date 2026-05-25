@@ -172,7 +172,6 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     if (pathname.startsWith('/terminal')) return 'Terminal'
     if (pathname.startsWith('/files')) return 'Files'
     if (pathname.startsWith('/jobs')) return 'Jobs'
-    if (pathname.startsWith('/tasks')) return 'Kanban'
     if (pathname.startsWith('/workflows')) return 'Workflows'
     if (pathname.startsWith('/conductor')) return 'Conductor'
     if (pathname.startsWith('/operations')) return 'Operations'
@@ -389,7 +388,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
               'h-full min-h-0 min-w-0 overflow-x-hidden bg-[var(--theme-bg)] relative',
               isOnChatRoute ? 'overflow-hidden' : 'overflow-y-auto',
               isMobile && !isOnChatRoute
-                ? 'pb-[calc(var(--tabbar-h,0px)+0.5rem)]'
+                ? 'pb-[calc(var(--tabbar-h,80px)+0.5rem)]'
                 : !isMobile &&
                     !isChromeFreeSurface &&
                     !isOnChatRoute &&
@@ -474,10 +473,8 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
       </div>
 
       {!isChromeFreeSurface ? <MobileHamburgerMenu /> : null}
-      {!isChromeFreeSurface &&
-      !isMobile &&
-      !isOnChatRoute &&
-      settings.showSystemMetricsFooter ? (
+      {!isChromeFreeSurface ? <MobileTabBar /> : null}
+      {!isChromeFreeSurface && !isMobile && !isOnChatRoute && settings.showSystemMetricsFooter ? (
         <SystemMetricsFooter leftOffsetPx={sidebarCollapsed ? 48 : 300} />
       ) : null}
       {!isChromeFreeSurface ? (

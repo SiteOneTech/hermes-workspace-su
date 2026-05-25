@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { getStateDir } from './workspace-state-dir'
 
 export type KnowledgeBaseSource =
   | { type: 'local'; path: string }
@@ -34,7 +35,7 @@ export function getDefaultLocalKnowledgeRoot(): string {
 }
 
 function getConfigPath(): string {
-  return path.join(getHermesHome(), 'knowledge-config.json')
+  return path.join(getStateDir(), 'knowledge-config.json')
 }
 
 export function readKnowledgeBaseConfig(): KnowledgeBaseConfig {
