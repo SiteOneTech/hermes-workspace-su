@@ -9,6 +9,11 @@ describe('update-system helpers', () => {
       ]),
     ).toBe(true)
     expect(
+      remoteUrlMatches('https://github.com/SiteOneTech/hermes-workspace-su.git', [
+        'SiteOneTech/hermes-workspace-su',
+      ]),
+    ).toBe(true)
+    expect(
       remoteUrlMatches('git@github.com:NousResearch/hermes-agent.git', [
         'hermes-agent',
       ]),

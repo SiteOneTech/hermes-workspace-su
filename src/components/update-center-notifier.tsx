@@ -221,6 +221,13 @@ export function UpdateCenterNotifier() {
   function closeNotes() {
     if (notes) localStorage.setItem(NOTES_SEEN_KEY, notes.id)
     setNotes(null)
+    void fetch('/api/update/dismiss-notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    }).catch(() => {
+      // Best-effort — local dismiss still works if the server call fails.
+    })
   }
 
   return (

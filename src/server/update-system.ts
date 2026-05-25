@@ -95,6 +95,36 @@ function readPendingReleaseNotes(): Array<ReleaseNoteSection> {
   }
 }
 
+export function clearPendingReleaseNotes(): void {
+  try {
+    const path = pendingNotesPath()
+    if (existsSync(path)) {
+      writeFileSync(path, `${JSON.stringify({ sections: [], updatedAt: Date.now() }, null, 2)}\n`)
+    }
+  } catch {
+    // Non-fatal — UI dismiss is best-effort.
+  }
+}
+
+const WORKSPACE_REPO_ALIASES = [
+  'hermes-workspace',
+  'hermes-workspace-su',
+  'outsourc-e/hermes-workspace',
+  'SiteOneTech/hermes-workspace-su',
+]
+
+function scheduleWorkspaceServiceRestart(): void {
+  const flag = (process.env.HERMES_WORKSPACE_AUTO_RESTART || '')
+    .trim()
+    .toLowerCase()
+  if (!['1', 'true', 'yes', 'on'].includes(flag)) return
+  setTimeout(() => {
+    exec('systemctl', ['--user', 'restart', 'zeus-workspace.service'], {
+      stdio: 'ignore',
+    })
+  }, 2_000)
+}
+
 function exec(
   command: string,
   args: Array<string>,
@@ -327,10 +357,7 @@ export function readWorkspaceUpdateStatus(
   }
 
   const remoteUrl = git(['remote', 'get-url', 'origin'], gitRepo)
-  const repoMatches = remoteUrlMatches(remoteUrl, [
-    'hermes-workspace',
-    'outsourc-e/hermes-workspace',
-  ])
+  const repoMatches = remoteUrlMatches(remoteUrl, WORKSPACE_REPO_ALIASES)
   if (repoMatches) git(['fetch', 'origin', '--quiet'], gitRepo, 30_000)
   const currentHead = git(['rev-parse', 'HEAD'], gitRepo)
   const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], gitRepo)
@@ -585,6 +612,9 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
     },
   ]
   persistPendingReleaseNotes(releaseNotes)
+  if (before.currentHead !== after.currentHead) {
+    scheduleWorkspaceServiceRestart()
+  }
   return {
     ok: true,
     product: 'workspace',

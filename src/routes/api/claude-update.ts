@@ -32,7 +32,13 @@ export const UPDATE_REMOTE_DEFINITIONS: Array<RemoteDefinition> = [
     name: 'origin',
     label: 'Hermes Workspace',
     expectedRepo: 'hermes-workspace',
-    aliases: ['claude-workspace', 'hermes-workspace', 'outsourc-e/hermes-workspace'],
+    aliases: [
+      'claude-workspace',
+      'hermes-workspace',
+      'hermes-workspace-su',
+      'outsourc-e/hermes-workspace',
+      'SiteOneTech/hermes-workspace-su',
+    ],
   },
   {
     name: 'upstream',

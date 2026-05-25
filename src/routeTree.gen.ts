@@ -113,6 +113,7 @@ import { Route as ApiAuthRouteImport } from './routes/api/auth'
 import { Route as ApiArtifactsRouteImport } from './routes/api/artifacts'
 import { Route as ApiUpdateWorkspaceRouteImport } from './routes/api/update/workspace'
 import { Route as ApiUpdateStatusRouteImport } from './routes/api/update/status'
+import { Route as ApiUpdateDismissNotesRouteImport } from './routes/api/update/dismiss-notes'
 import { Route as ApiUpdateAgentRouteImport } from './routes/api/update/agent'
 import { Route as ApiSwarmRuntimeResetRouteImport } from './routes/api/swarm-runtime.reset'
 import { Route as ApiSwarmMemorySearchRouteImport } from './routes/api/swarm-memory/search'
@@ -683,6 +684,11 @@ const ApiUpdateStatusRoute = ApiUpdateStatusRouteImport.update({
   path: '/api/update/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUpdateDismissNotesRoute = ApiUpdateDismissNotesRouteImport.update({
+  id: '/api/update/dismiss-notes',
+  path: '/api/update/dismiss-notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUpdateAgentRoute = ApiUpdateAgentRouteImport.update({
   id: '/api/update/agent',
   path: '/api/update/agent',
@@ -1075,6 +1081,7 @@ export interface FileRoutesByFullPath {
   '/api/swarm-memory/search': typeof ApiSwarmMemorySearchRoute
   '/api/swarm-runtime/reset': typeof ApiSwarmRuntimeResetRoute
   '/api/update/agent': typeof ApiUpdateAgentRoute
+  '/api/update/dismiss-notes': typeof ApiUpdateDismissNotesRoute
   '/api/update/status': typeof ApiUpdateStatusRoute
   '/api/update/workspace': typeof ApiUpdateWorkspaceRoute
   '/api/hermesworld/reservations/confirm': typeof ApiHermesworldReservationsConfirmRoute
@@ -1228,6 +1235,7 @@ export interface FileRoutesByTo {
   '/api/swarm-memory/search': typeof ApiSwarmMemorySearchRoute
   '/api/swarm-runtime/reset': typeof ApiSwarmRuntimeResetRoute
   '/api/update/agent': typeof ApiUpdateAgentRoute
+  '/api/update/dismiss-notes': typeof ApiUpdateDismissNotesRoute
   '/api/update/status': typeof ApiUpdateStatusRoute
   '/api/update/workspace': typeof ApiUpdateWorkspaceRoute
   '/api/hermesworld/reservations/confirm': typeof ApiHermesworldReservationsConfirmRoute
@@ -1383,6 +1391,7 @@ export interface FileRoutesById {
   '/api/swarm-memory/search': typeof ApiSwarmMemorySearchRoute
   '/api/swarm-runtime/reset': typeof ApiSwarmRuntimeResetRoute
   '/api/update/agent': typeof ApiUpdateAgentRoute
+  '/api/update/dismiss-notes': typeof ApiUpdateDismissNotesRoute
   '/api/update/status': typeof ApiUpdateStatusRoute
   '/api/update/workspace': typeof ApiUpdateWorkspaceRoute
   '/api/hermesworld/reservations/confirm': typeof ApiHermesworldReservationsConfirmRoute
@@ -1539,6 +1548,7 @@ export interface FileRouteTypes {
     | '/api/swarm-memory/search'
     | '/api/swarm-runtime/reset'
     | '/api/update/agent'
+    | '/api/update/dismiss-notes'
     | '/api/update/status'
     | '/api/update/workspace'
     | '/api/hermesworld/reservations/confirm'
@@ -1692,6 +1702,7 @@ export interface FileRouteTypes {
     | '/api/swarm-memory/search'
     | '/api/swarm-runtime/reset'
     | '/api/update/agent'
+    | '/api/update/dismiss-notes'
     | '/api/update/status'
     | '/api/update/workspace'
     | '/api/hermesworld/reservations/confirm'
@@ -1846,6 +1857,7 @@ export interface FileRouteTypes {
     | '/api/swarm-memory/search'
     | '/api/swarm-runtime/reset'
     | '/api/update/agent'
+    | '/api/update/dismiss-notes'
     | '/api/update/status'
     | '/api/update/workspace'
     | '/api/hermesworld/reservations/confirm'
@@ -1976,6 +1988,7 @@ export interface RootRouteChildren {
   ApiProfilesUpdateRoute: typeof ApiProfilesUpdateRoute
   ApiProfilesUpdateIdentityRoute: typeof ApiProfilesUpdateIdentityRoute
   ApiUpdateAgentRoute: typeof ApiUpdateAgentRoute
+  ApiUpdateDismissNotesRoute: typeof ApiUpdateDismissNotesRoute
   ApiUpdateStatusRoute: typeof ApiUpdateStatusRoute
   ApiUpdateWorkspaceRoute: typeof ApiUpdateWorkspaceRoute
 }
@@ -2710,6 +2723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUpdateStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/update/dismiss-notes': {
+      id: '/api/update/dismiss-notes'
+      path: '/api/update/dismiss-notes'
+      fullPath: '/api/update/dismiss-notes'
+      preLoaderRoute: typeof ApiUpdateDismissNotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/update/agent': {
       id: '/api/update/agent'
       path: '/api/update/agent'
@@ -3380,6 +3400,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProfilesUpdateRoute: ApiProfilesUpdateRoute,
   ApiProfilesUpdateIdentityRoute: ApiProfilesUpdateIdentityRoute,
   ApiUpdateAgentRoute: ApiUpdateAgentRoute,
+  ApiUpdateDismissNotesRoute: ApiUpdateDismissNotesRoute,
   ApiUpdateStatusRoute: ApiUpdateStatusRoute,
   ApiUpdateWorkspaceRoute: ApiUpdateWorkspaceRoute,
 }
