@@ -18,7 +18,7 @@ import { Toaster } from '@/components/ui/toast'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { KeyboardShortcutsModal } from '@/components/keyboard-shortcuts-modal'
 import { UpdateCenterNotifier } from '@/components/update-center-notifier'
-import { initializeSettingsAppearance } from '@/hooks/use-settings'
+import { initializeSettingsAppearance, useSettings } from '@/hooks/use-settings'
 import { useApplyChatWidth } from '@/hooks/use-chat-settings'
 import {
   ClaudeOnboarding,
@@ -221,11 +221,7 @@ export function wrapInlineScript(source: string): string {
 }
 
 type ServiceWorkerLike = {
-  getRegistrations: () => Promise<
-    ReadonlyArray<{
-      unregister: () => boolean | Promise<boolean> | void | Promise<void>
-    }>
-  >
+  register: (scriptURL: string, options?: RegistrationOptions) => Promise<unknown>
 }
 
 type CachesLike = {
@@ -233,31 +229,29 @@ type CachesLike = {
   delete: (name: string) => Promise<boolean> | boolean
 }
 
-export async function unregisterServiceWorkers({
+export async function registerAppServiceWorker({
   serviceWorker,
   cachesApi,
 }: {
   serviceWorker?: ServiceWorkerLike
   cachesApi?: CachesLike
 }): Promise<void> {
-  await serviceWorker
-    ?.getRegistrations()
-    .then((registrations) =>
-      Promise.allSettled(
-        registrations.map((registration) => registration.unregister()),
-      ),
-    )
-    .catch(() => undefined)
-
   await cachesApi
     ?.keys()
     .then((names) =>
       Promise.allSettled(names.map((name) => cachesApi.delete(name))),
     )
     .catch(() => undefined)
+
+  await serviceWorker
+    ?.register('/sw.js', { scope: '/' })
+    .catch((error: unknown) => {
+      console.warn('PWA service worker registration failed', error)
+    })
 }
 
 function RootLayout() {
+  const { settings } = useSettings()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const isHermesWorldLandingRoute =
     pathname === '/hermes-world' ||
@@ -323,7 +317,7 @@ function RootLayout() {
       handleOnboardingCompleteChanged,
     )
 
-    void unregisterServiceWorkers({
+    void registerAppServiceWorker({
       serviceWorker:
         'serviceWorker' in navigator ? navigator.serviceWorker : undefined,
       cachesApi: 'caches' in window ? caches : undefined,
@@ -376,10 +370,8 @@ function RootLayout() {
             </ErrorBoundary>
           </WorkspaceShell>
           {!isHermesWorldLandingRoute ? <SearchModal /> : null}
-          {/* UsageMeter must be mounted at root so the OPEN_USAGE event from
-              the search modal's Usage tile has a listener. See #258.
-              But public launch surfaces like HermesWorld should not show app usage chrome. */}
-          {!isGameSurfaceRoute ? <UsageMeter /> : null}
+          {/* Keep UsageMeter mounted so search-modal OPEN_USAGE still works even when the pill is hidden by default. */}
+          {!isGameSurfaceRoute ? <UsageMeter visible={settings.showUsageMeter} /> : null}
           {!isHermesWorldLandingRoute ? <KeyboardShortcutsModal /> : null}
           {!isHermesWorldLandingRoute ? <UpdateCenterNotifier /> : null}
           {rootSurfaceState.showPostOnboardingOverlays && !isGameSurfaceRoute ? (
@@ -424,12 +416,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
+        <div id="splash-screen" aria-hidden="true" style={{ display: 'none' }} />
         <script
           dangerouslySetInnerHTML={{
             __html: wrapInlineScript(`
           (function(){
-            if (document.getElementById('splash-screen')) return;
             if (location.pathname === '/hermes-world' || location.pathname.indexOf('/hermes-world/') === 0 || location.pathname === '/world' || location.pathname.indexOf('/world/') === 0) return;
+            var d = document.getElementById('splash-screen');
+            if (!d) return;
             var bg = '#031A1A', txt = '#F8F1E3', muted = '#9CB2AE', accent = '#FFAC02';
             try {
               var theme = localStorage.getItem('${THEME_STORAGE_KEY}') || '${DEFAULT_THEME}';
@@ -475,14 +469,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             var quips = ["Consulting the oracle...","Loading ancient knowledge...","Warming up the messenger...","Calibrating tool chain...","Summoning your agent...","Preparing the workspace...","Bridging realms...","Initializing agent runtime..."];
             var quip = quips[Math.floor(Math.random() * quips.length)];
 
-            var d = document.createElement('div');
-            d.id = 'splash-screen';
             d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:'+bg+';transition:opacity 0.5s ease;';
             d.innerHTML = '<img src="/claude-avatar.webp" alt="Hermes Agent" style="width:80px;height:80px;margin-bottom:20px;border-radius:16px;filter:drop-shadow(0 8px 32px color-mix(in srgb,'+accent+' 45%, transparent))" />'
               + '<img src="'+(isDark ? '/claude-banner.png' : '/claude-banner-light.png')+'" alt="Hermes Workspace" style="width:280px;height:auto;margin-bottom:8px;filter:drop-shadow(0 4px 16px '+(isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)')+')" />'
               + '<div style="font:400 14px/1 system-ui,-apple-system,sans-serif;letter-spacing:0.04em;color:'+muted+'">Workspace</div>'
               + '<div style="margin-top:28px;width:140px;height:3px;background:'+(isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')+';border-radius:3px;overflow:hidden;position:relative"><div id=splash-bar style="width:0%;height:100%;background:'+accent+';border-radius:3px;transition:width 0.4s ease"></div></div>';
-            document.body.prepend(d);
 
             var bar = document.getElementById('splash-bar');
             if (bar) {
@@ -499,7 +490,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               if (bar) bar.style.width = '100%';
               setTimeout(function(){
                 el.style.opacity = '0';
-                setTimeout(function(){ el.remove(); }, 500);
+                setTimeout(function(){
+                  el.innerHTML = '';
+                  el.style.cssText = 'display:none';
+                }, 500);
               }, 300);
             };
             // Fallback: always dismiss after 5s

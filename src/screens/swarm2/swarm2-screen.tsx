@@ -153,6 +153,7 @@ type RuntimeEntry = {
   lastResult?: string | null
   blockedReason?: string | null
   checkpointStatus?: string | null
+  state?: string | null
   needsHuman?: boolean | null
   assignedTaskCount?: number | null
   cronJobCount?: number | null
@@ -839,6 +840,8 @@ function ControlPlaneStage({
                       cardRef={setWorkerRef(member.id)}
                       member={member}
                       currentTask={runtime?.currentTask ?? null}
+                      checkpointStatus={runtime?.checkpointStatus ?? null}
+                      runtimeState={runtime?.state ?? null}
                       recentLines={recentLines(runtime)}
                       recentOutputAt={runtime?.lastOutputAt ?? runtime?.lastSessionStartedAt ?? null}
                       recentSummary={runtime?.lastRealSummary ?? runtime?.lastRealResult ?? runtime?.lastSummary ?? runtime?.lastResult ?? runtime?.blockedReason ?? null}
@@ -1490,15 +1493,12 @@ export function Swarm2Screen() {
               </div>
               <div className="min-w-0">
                 <h1 className="truncate text-base font-semibold text-primary-900">
-                  Local Swarm
+                  Swarm
                 </h1>
                 <p className="truncate text-xs text-[var(--theme-muted-2)]">
                   {members.length > 0
-                    ? `Detected ${members.length} local worker${members.length === 1 ? '' : 's'} for tmux-based experiments, reports, and reviewer-gated execution.`
-                    : 'Detected Hermes profiles and roster workers for local tmux experiments, reports, and reviewer-gated execution.'}
-                </p>
-                <p className="mt-1 max-w-3xl truncate text-[11px] text-[var(--theme-muted)]">
-                  This is a local workspace lab, not the canonical Sicilia Factory workflow. Factory and department workflow state lives in Workflows.
+                    ? `Detected ${members.length} worker${members.length === 1 ? '' : 's'} for planning, routing, reports, and reviewer-gated execution.`
+                    : 'Detected Hermes profiles and roster workers for planning, routing, reports, and reviewer-gated execution.'}
                 </p>
               </div>
             </div>
@@ -1506,28 +1506,28 @@ export function Swarm2Screen() {
             <div className="relative flex shrink-0 items-center gap-2 text-sm text-[var(--theme-muted)]">
               <WorkflowHelpModal
                 compact
-                eyebrow="Local Swarm"
-                title="How Local Swarm works"
+                eyebrow="Swarm"
+                title="How Swarm works"
                 sections={[
                   {
                     title: 'What this surface does',
                     bullets: [
-                      'Local Swarm turns workspace workers into one tmux-based execution surface.',
-                      'Use it for experiments or local coordination that should not replace the durable Orchestration Core.',
+                      'Swarm turns a group of workers into one coordinated execution surface.',
+                      'Use it to route tasks, monitor state, and keep parallel work moving without losing context.',
                     ],
                   },
                   {
-                    title: 'Boundary',
+                    title: 'Typical flow',
                     bullets: [
-                      'Factory, Scrum, content, and branch department workflows belong in Workflows.',
-                      'Kanban inside Local Swarm is a local board for that lab only.',
+                      'Review worker state, then dispatch or reroute work from the orchestration controls.',
+                      'Use reports, inbox, and runtime signals to spot blockers and pull workers back on track.',
                     ],
                   },
                   {
                     title: 'FAQ',
                     bullets: [
                       'If a worker is missing setup or model config, fix that in Operations first.',
-                      'Local Swarm is not a visualization of Sicilia Factory unless Zeus explicitly routes a lab experiment here.',
+                      'Swarm2 is the operational coordination layer, not the first-time setup screen.',
                     ],
                   },
                 ]}

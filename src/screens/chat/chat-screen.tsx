@@ -22,7 +22,11 @@ import {
 } from './utils'
 import {
   advanceStickyStreamingText,
+  createResponseWaitSnapshot,
   createOptimisticMessage,
+  isTerminalActiveRunStatus,
+  shouldClearWaitingForAssistantMessage,
+  type ResponseWaitSnapshot,
 } from './chat-screen-utils'
 import {
   appendHistoryMessage,
@@ -45,6 +49,7 @@ import {
   isRecentSession,
   resetPendingSend,
   setPendingGeneration,
+  clearPendingSendForSession,
 } from './pending-send'
 import { useChatMeasurements } from './hooks/use-chat-measurements'
 import { useChatHistory } from './hooks/use-chat-history'
@@ -96,7 +101,7 @@ import { MobileSessionsPanel } from '@/components/mobile-sessions-panel'
 import { ContextAlertModal } from '@/components/usage-meter/context-alert-modal'
 import { ErrorToastContainer, showErrorToast } from '@/components/error-toast'
 // ContextMeter removed — ContextBar (PR #32) replaces it
-import { useChatStore } from '@/stores/chat-store'
+import { useChatStore, persistRecoveryMessage } from '@/stores/chat-store'
 import { useResearchCard } from '@/hooks/use-research-card'
 // MOBILE_TAB_BAR_OFFSET removed — tab bar always hidden in chat
 import { useTapDebug } from '@/hooks/use-tap-debug'
@@ -481,11 +486,29 @@ export function ChatScreen({
   // resolvedSessionKey isn't available yet (defined below), so we track it via
   // a ref that's updated once it resolves. The memo/callback read the ref.
   const sessionKeyForWaiting = useRef<string | undefined>(undefined)
+  const [activeRunCheckDone, setActiveRunCheckDone] = useState(false)
+
+  // Track stale-restored sessions that need API verification before showing thinking.
+  // On page reload, sessionStorage may contain stale "waiting" flags from a
+  // previous session. We must not show the thinking indicator until the
+  // active-run API check confirms the run is genuinely active. (Issue #449)
+  const pendingVerifySessionKeyRef = useRef<string | undefined>(undefined)
   const waitingForResponse = useMemo(() => {
     const key = sessionKeyForWaiting.current
     if (!key) return hasPendingSend() || hasPendingGeneration()
+
+    // If we restored waiting state from sessionStorage but haven't verified
+    // with the API yet, don't show thinking — it might be stale (Issue #449).
+    if (
+      storeWaiting.has(key) &&
+      pendingVerifySessionKeyRef.current === key &&
+      !activeRunCheckDone
+    ) {
+      return false
+    }
+
     return storeWaiting.has(key)
-  }, [storeWaiting])
+  }, [storeWaiting, activeRunCheckDone])
 
   const setWaitingForResponse = useCallback((waiting: boolean) => {
     const store = useChatStore.getState()
@@ -591,11 +614,30 @@ export function ChatScreen({
   // Keep the waiting-state ref in sync with the resolved session key
   sessionKeyForWaiting.current = resolvedSessionKey
 
+  // Detect stale restored waiting state from sessionStorage — we need API
+  // verification before showing thinking (Issue #449).
+  useEffect(() => {
+    const currentSessionKey = resolvedSessionKey
+    if (!currentSessionKey || isNewChat) return
+    const store = useChatStore.getState()
+    if (store.isSessionWaiting(currentSessionKey)) {
+      pendingVerifySessionKeyRef.current = currentSessionKey
+      setActiveRunCheckDone(false)
+    } else {
+      // No restored waiting state — no need to verify
+      pendingVerifySessionKeyRef.current = undefined
+      setActiveRunCheckDone(true)
+    }
+  }, [resolvedSessionKey, isNewChat])
+
   // On remount, check if the server still has an active run for this session.
   // If so, re-set waitingForResponse in the store so the UI shows the spinner.
   useActiveRunCheck({
     sessionKey: resolvedSessionKey ?? '',
     enabled: !isNewChat && Boolean(resolvedSessionKey) && historyQuery.isSuccess,
+    onCheckComplete: useCallback(() => {
+      setActiveRunCheckDone(true)
+    }, []),
   })
 
   // Wire SSE realtime stream for instant message delivery
@@ -910,10 +952,8 @@ export function ChatScreen({
         if (!data.ok) return
         // Run not yet registered (gateway lag during silent processing) → keep waiting
         if (!data.run) return
-        const status = data.run.status
         // Treat unknown / transient statuses as still-active to avoid premature teardown
-        const terminalStatuses = ['completed', 'failed', 'cancelled', 'error']
-        if (terminalStatuses.includes(status)) {
+        if (isTerminalActiveRunStatus(data.run.status)) {
           streamFinish()
           refreshHistoryRef.current()
         }
@@ -947,10 +987,18 @@ export function ChatScreen({
   })
 
   const currentModelQuery = useQuery({
-    queryKey: ['claude', 'session-status-model'],
+    queryKey: [
+      'claude',
+      'session-status-model',
+      resolvedSessionKey || activeFriendlyId || 'main',
+    ],
     queryFn: async () => {
       try {
-        const res = await fetch('/api/session-status')
+        const statusSessionKey = resolvedSessionKey || activeFriendlyId || 'main'
+        const query = statusSessionKey
+          ? `?sessionKey=${encodeURIComponent(statusSessionKey)}`
+          : ''
+        const res = await fetch(`/api/session-status${query}`)
         if (!res.ok) return ''
         const data = await res.json()
         const payload = data.payload ?? data
@@ -1035,6 +1083,9 @@ export function ChatScreen({
     startStreaming,
     cancelStreaming,
   } = useStreamingMessage({
+    pinMainSession:
+      activeFriendlyId === 'main' &&
+      (resolvedSessionKey || activeFriendlyId || 'main') === 'main',
     onSessionResolved: useCallback(
       ({
         sessionKey,
@@ -1071,6 +1122,10 @@ export function ChatScreen({
           (message) => ({
             ...message,
             status: 'sent',
+            // Clear __optimisticId so isOptimisticUserMessage returns false.
+            // Without this the message keeps being treated as pending and
+            // gets re-persisted, causing transcript duplication. Fixes #506.
+            __optimisticId: undefined,
             runId: runId ?? message.runId,
           }),
         )
@@ -1078,7 +1133,7 @@ export function ChatScreen({
       },
       [queryClient],
     ),
-    onComplete: useCallback(() => {
+    onComplete: useCallback((message: ChatMessage) => {
       const activeSend = activeSendRef.current
       if (activeSend?.clientId) {
         updateHistoryMessageByClientIdEverywhere(
@@ -1088,6 +1143,13 @@ export function ChatScreen({
             ...message,
             status: 'done',
           }),
+        )
+      }
+      if (activeSend?.sessionKey) {
+        persistRecoveryMessage(activeSend.sessionKey, message)
+        clearPendingSendForSession(
+          activeSend.sessionKey,
+          activeSend.friendlyId,
         )
       }
       activeSendRef.current = null
@@ -1398,8 +1460,7 @@ export function ChatScreen({
     localStreamingMessageId,
   ])
 
-  const messageCountAtSendRef = useRef(0)
-  const lastAssistantIdAtSendRef = useRef<string | null>(null)
+  const responseWaitSnapshotRef = useRef<ResponseWaitSnapshot | null>(null)
   const prevIsRealtimeStreamingRef = useRef(activeIsRealtimeStreaming)
   const activeRealtimeStreamingRef = useRef(activeIsRealtimeStreaming)
 
@@ -1408,22 +1469,13 @@ export function ChatScreen({
   }, [activeIsRealtimeStreaming])
 
   useEffect(() => {
-    if (waitingForResponse) {
-      messageCountAtSendRef.current = finalDisplayMessages.length
-      const lastMsg = finalDisplayMessages[finalDisplayMessages.length - 1]
-      if (lastMsg?.role === 'assistant') {
-        const raw = lastMsg as Record<string, unknown>
-        lastAssistantIdAtSendRef.current = String(
-          raw.__optimisticId ??
-            raw.id ??
-            raw.messageId ??
-            raw.__realtimeSequence ??
-            '',
-        )
-      } else {
-        lastAssistantIdAtSendRef.current = null
-      }
+    if (!waitingForResponse) {
+      responseWaitSnapshotRef.current = null
+      return
     }
+    if (responseWaitSnapshotRef.current) return
+    responseWaitSnapshotRef.current =
+      createResponseWaitSnapshot(finalDisplayMessages)
   }, [waitingForResponse, finalDisplayMessages])
 
   useEffect(() => {
@@ -1434,24 +1486,9 @@ export function ChatScreen({
       }
       return
     }
-    const last = finalDisplayMessages[finalDisplayMessages.length - 1]
-    if (!last || last.role !== 'assistant') return
-    if ((last as any).__streamingStatus === 'streaming') return
-    const countGrew =
-      finalDisplayMessages.length > messageCountAtSendRef.current
-    const raw = last as Record<string, unknown>
-    const currentId = String(
-      raw.__optimisticId ??
-        raw.id ??
-        raw.messageId ??
-        raw.__realtimeSequence ??
-        '',
-    )
-    const identityChanged =
-      currentId.length > 0 &&
-      currentId !== (lastAssistantIdAtSendRef.current ?? '')
-    const noAssistantAtSend = lastAssistantIdAtSendRef.current === null
-    if (countGrew || identityChanged || noAssistantAtSend) {
+    const snapshot = responseWaitSnapshotRef.current
+    if (!snapshot) return
+    if (shouldClearWaitingForAssistantMessage(finalDisplayMessages, snapshot)) {
       if (clearTimerRef.current) return
       clearTimerRef.current = window.setTimeout(() => {
         clearTimerRef.current = null
@@ -2701,7 +2738,10 @@ export function ChatScreen({
           {hideUi ? null : (
             <ContextBar
               sessionId={
-                activeSession?.key || activeSessionKey || resolvedSessionKey
+                resolvedSessionKey ||
+                activeCanonicalKey ||
+                activeSession?.key ||
+                activeSessionKey
               }
             />
           )}
@@ -2762,7 +2802,10 @@ export function ChatScreen({
               sessionKey={
                 isNewChat
                   ? undefined
-                  : forcedSessionKey || resolvedSessionKey || activeSessionKey
+                  : forcedSessionKey ||
+                    resolvedSessionKey ||
+                    activeCanonicalKey ||
+                    activeSessionKey
               }
               wrapperRef={composerRef}
               composerRef={composerHandleRef}

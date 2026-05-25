@@ -11,13 +11,12 @@ describe('workspace shell sidebar backdrop', () => {
 })
 
 describe('swarm2 navigation alias handling', () => {
-  it('shows Kanban in the mobile hamburger menu', () => {
+  it('does not expose a fork-only Kanban shortcut in the mobile hamburger menu', () => {
     const kanban = MOBILE_HAMBURGER_NAV_ITEMS.find(
       (item) => item.id === 'tasks',
     )
 
-    expect(kanban?.to).toBe('/tasks')
-    expect(kanban?.label).toBe('Kanban')
+    expect(kanban).toBeUndefined()
   })
 
   it('shows the canonical workflow view separately from local swarm', () => {

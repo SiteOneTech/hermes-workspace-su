@@ -6,7 +6,6 @@ import {
   Cancel01Icon,
   Castle02Icon,
   Chat01Icon,
-  CheckListIcon,
   Clock01Icon,
   CommandLineIcon,
   DashboardSquare01Icon,
@@ -64,13 +63,6 @@ const MOBILE_HAMBURGER_NAV_ITEMS_BASE = [
     icon: Clock01Icon,
     to: '/jobs',
     match: (p: string) => p.startsWith('/jobs'),
-  },
-  {
-    id: 'tasks',
-    label: 'Kanban',
-    icon: CheckListIcon,
-    to: '/tasks',
-    match: (p: string) => p.startsWith('/tasks'),
   },
   {
     id: 'workflows',

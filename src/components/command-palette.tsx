@@ -199,7 +199,7 @@ export function CommandPalette({ pathname, sessions }: CommandPaletteProps) {
         id: 'screen-workflows',
         group: 'Screens',
         label: 'Workflows',
-        keywords: 'orchestration zeus factory scrum workflow runs kanban',
+        keywords: 'orchestration zeus factory scrum workflow runs',
         shortcut: 'Go',
         icon: Building01Icon,
         onSelect: () => void navigate({ to: '/workflows' }),
