@@ -1,6 +1,6 @@
 /**
- * React hook for sound notifications in ClawSuite
- * Integrates with the agent swarm store to auto-play sounds on state changes
+ * React hook for sound notifications in the SitioUno Factory workspace
+ * Integrates with the agent swarm/factory store to auto-play sounds on state changes
  */
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 

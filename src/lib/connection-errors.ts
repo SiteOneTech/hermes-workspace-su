@@ -1,5 +1,5 @@
 export type ConnectionErrorKind =
-  | 'clawsuite_auth_required'
+  | 'factory_auth_required'
   | 'gateway_auth_rejected'
   | 'gateway_pairing_required'
   | 'gateway_unreachable'
@@ -37,7 +37,7 @@ export function classifyConnectionError(
   const msg = typeof error === 'string' ? error : (error?.message ?? '')
   const lower = msg.toLowerCase()
   if (!lower && !status) return 'gateway_unreachable'
-  if (status === 401) return 'clawsuite_auth_required'
+  if (status === 401) return 'factory_auth_required'
   if (
     status === 403 ||
     lower.includes('pair') ||
@@ -92,10 +92,10 @@ export function getConnectionErrorMessage(
   kind: ConnectionErrorKind,
 ): ConnectionErrorInfo {
   switch (kind) {
-    case 'clawsuite_auth_required':
+    case 'factory_auth_required':
       return {
-        title: 'ClawSuite Login Required',
-        description: 'This instance requires a password to access.',
+        title: 'Factory Login Required',
+        description: 'This SitioUno Factory workspace requires a password to access.',
         action: 'Enter your password to continue',
       }
     case 'gateway_auth_rejected':
@@ -153,8 +153,7 @@ export function getConnectionErrorInfo(
 ): ConnectionErrorInfo & { kind: ConnectionErrorKind; details?: string } {
   const kind = classifyConnectionError(error, status)
   const base = getConnectionErrorMessage(kind)
-  const details =
-    typeof error === 'string' ? error.trim() : (error?.message?.trim() ?? '')
+  const details = typeof error === 'string' ? error.trim() : (error?.message.trim() ?? '')
 
   const showDetails =
     details.length > 0 &&
@@ -164,6 +163,7 @@ export function getConnectionErrorInfo(
       'failed to fetch',
       'gateway not reachable',
       'could not reach clawsuite server',
+      'could not reach factory server',
     ].includes(details.toLowerCase())
 
   return {

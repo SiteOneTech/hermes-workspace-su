@@ -13,8 +13,8 @@ describe('classifyConnectionError', () => {
     expect(classifyConnectionError(null, null)).toBe('gateway_unreachable')
   })
 
-  it('classifies HTTP 401 as clawsuite_auth_required', () => {
-    expect(classifyConnectionError('boom', 401)).toBe('clawsuite_auth_required')
+  it('classifies HTTP 401 as factory_auth_required', () => {
+    expect(classifyConnectionError('boom', 401)).toBe('factory_auth_required')
   })
 
   it('classifies HTTP 403 as gateway_pairing_required', () => {
@@ -106,12 +106,12 @@ describe('classifyConnectionError', () => {
 describe('getConnectionErrorMessage', () => {
   it('returns a distinct gateway-specific message for gateway_auth_rejected', () => {
     // Regression: previously this case was a fallthrough that re-used the
-    // ClawSuite-login text, telling users to "Enter your password" when
+    // workspace-login text, telling users to "Enter your password" when
     // their actual problem was the gateway refusing their device token.
     const gateway = getConnectionErrorMessage('gateway_auth_rejected')
-    const clawsuite = getConnectionErrorMessage('clawsuite_auth_required')
-    expect(gateway.title).not.toBe(clawsuite.title)
-    expect(gateway.description).not.toBe(clawsuite.description)
+    const factory = getConnectionErrorMessage('factory_auth_required')
+    expect(gateway.title).not.toBe(factory.title)
+    expect(gateway.description).not.toBe(factory.description)
     expect(gateway.title.toLowerCase()).toContain('gateway')
     // The action should point the user at re-pairing / token config, not
     // at entering a password.
@@ -120,7 +120,7 @@ describe('getConnectionErrorMessage', () => {
 
   it('returns a non-empty message for every kind', () => {
     const kinds = [
-      'clawsuite_auth_required',
+      'factory_auth_required',
       'gateway_auth_rejected',
       'gateway_pairing_required',
       'gateway_unreachable',
@@ -149,7 +149,7 @@ describe('getConnectionErrorInfo', () => {
 
   it('suppresses generic details that duplicate the title', () => {
     const info = getConnectionErrorInfo('unauthorized', 401)
-    expect(info.kind).toBe('clawsuite_auth_required')
+    expect(info.kind).toBe('factory_auth_required')
     expect(info.details).toBeUndefined()
   })
 

@@ -4,7 +4,7 @@ export type WorkflowTemplate = {
   description: string
   icon: string
   goal: string
-  tags?: string[]
+  tags?: Array<string>
   teamConfigId?: string
   tasks: Array<{
     title: string
@@ -15,10 +15,50 @@ export type WorkflowTemplate = {
   isBuiltIn?: boolean
 }
 
-const STORAGE_KEY = 'clawsuite:workflow-templates'
+const STORAGE_KEY = 'sitiouno-factory:workflow-templates'
 
-// Built-in templates that ship with ClawSuite
-export const BUILT_IN_TEMPLATES: WorkflowTemplate[] = [
+// Built-in templates aligned with the SitioUno Software Factory.
+export const BUILT_IN_TEMPLATES: Array<WorkflowTemplate> = [
+  {
+    id: 'tpl-sitiouno-factory-dual-method',
+    name: 'SitioUno Factory: Zeus + BMAD Parallel',
+    description: 'Run Zeus Native Factory and BMAD/Hybrid lanes in parallel, then integrate the winning output',
+    icon: '🏭',
+    goal: 'Create parallel lanes for Zeus Native and BMAD/Hybrid, execute the same project spec in isolated branches/worktrees, compare objective evidence, then integrate the selected result.',
+    tags: ['factory', 'zeus', 'bmad', 'benchmark', 'integration'],
+    tasks: [
+      { title: 'Create intake and functional spec from user request' },
+      { title: 'Create Zeus lane task graph and gates' },
+      { title: 'Create BMAD/Hybrid lane PRD, architecture and stories' },
+      { title: 'Execute both lanes in isolated worktrees/branches' },
+      { title: 'Run quality, QA, security and delivery gates' },
+      { title: 'Compare method benchmark and choose integration path' },
+      { title: 'Integrate selected output and produce delivery report' },
+    ],
+    createdAt: 0,
+    updatedAt: 0,
+    isBuiltIn: true,
+  },
+  {
+    id: 'tpl-sitiouno-factory-critical-fintech',
+    name: 'SitioUno Factory: Critical Fintech Delivery',
+    description: 'Factory flow for payments, auth, PII, PCI or financial workflows with mandatory security gates',
+    icon: '🔐',
+    goal: 'Deliver a critical fintech feature through functional analysis, architecture, threat review, implementation, QA, security review, and human delivery approval.',
+    tags: ['factory', 'fintech', 'security', 'qa', 'payments'],
+    tasks: [
+      { title: 'Document business rules, actors, risk areas and acceptance criteria' },
+      { title: 'Design architecture, DB/API changes and rollback strategy' },
+      { title: 'Create implementation plan with isolated branch/worktree' },
+      { title: 'Implement with evidence and tests' },
+      { title: 'Run QA verifier smoke/regression pass' },
+      { title: 'Run security reviewer gate for auth, PII, secrets and payment risks' },
+      { title: 'Prepare release report and human approval checklist' },
+    ],
+    createdAt: 0,
+    updatedAt: 0,
+    isBuiltIn: true,
+  },
   {
     id: 'tpl-code-review',
     name: 'Code Review',
@@ -125,23 +165,23 @@ export const BUILT_IN_TEMPLATES: WorkflowTemplate[] = [
   },
 ]
 
-export function loadCustomTemplates(): WorkflowTemplate[] {
+export function loadCustomTemplates(): Array<WorkflowTemplate> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
-    return JSON.parse(raw) as WorkflowTemplate[]
+    return JSON.parse(raw) as Array<WorkflowTemplate>
   } catch {
     return []
   }
 }
 
-export function saveCustomTemplates(templates: WorkflowTemplate[]): void {
+export function saveCustomTemplates(templates: Array<WorkflowTemplate>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(templates))
   } catch { /* ignore */ }
 }
 
-export function getAllTemplates(): WorkflowTemplate[] {
+export function getAllTemplates(): Array<WorkflowTemplate> {
   return [...BUILT_IN_TEMPLATES, ...loadCustomTemplates()]
 }
 

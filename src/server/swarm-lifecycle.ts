@@ -78,7 +78,7 @@ print(json.dumps(result))
 `
 
 function handoffPath(workerId: string): string {
-  return join(SWARM_MEMORY_ROOT, 'memory', 'handoffs', 'swarm', `${workerId}-latest.md`)
+  return join(SWARM_MEMORY_ROOT, 'memory', 'handoffs', 'factory', `${workerId}-latest.md`)
 }
 
 function classify(totalTokens: number, policy: SwarmLifecyclePolicy): SwarmContextState {
@@ -92,8 +92,8 @@ function recommendedAction(state: SwarmContextState): string {
   switch (state) {
     case 'healthy': return 'Continue normally.'
     case 'watch': return 'Monitor context; request concise checkpoint soon.'
-    case 'handoff_required': return 'Request durable handoff before assigning more work.'
-    case 'renew_required': return 'Renew worker after handoff; avoid new work until restarted.'
+    case 'handoff_required': return 'Request durable Factory handoff before assigning more work.'
+    case 'renew_required': return 'Renew Factory worker after handoff; avoid new work until restarted.'
   }
 }
 
@@ -151,12 +151,12 @@ function sendTmux(workerId: string, prompt: string): Promise<{ ok: boolean; erro
   return new Promise((resolve) => {
     const tmux = tmuxBin()
     const child = execFile(tmux, ['load-buffer', '-b', `swarm-lifecycle-${workerId}`, '-'], (loadErr, _stdout, stderr) => {
-      if (loadErr) return resolve({ ok: false, error: stderr?.toString() || loadErr.message })
+      if (loadErr) return resolve({ ok: false, error: stderr.toString() || loadErr.message })
       execFile(tmux, ['send-keys', '-t', session, 'C-u'], () => {
         execFile(tmux, ['paste-buffer', '-d', '-b', `swarm-lifecycle-${workerId}`, '-t', session], (pasteErr, _out2, err2) => {
-          if (pasteErr) return resolve({ ok: false, error: err2?.toString() || pasteErr.message })
+          if (pasteErr) return resolve({ ok: false, error: err2.toString() || pasteErr.message })
           setTimeout(() => execFile(tmux, ['send-keys', '-t', session, 'Enter'], (enterErr, _out3, err3) => {
-            if (enterErr) return resolve({ ok: false, error: err3?.toString() || enterErr.message })
+            if (enterErr) return resolve({ ok: false, error: err3.toString() || enterErr.message })
             resolve({ ok: true })
           }), 150)
         })
@@ -184,7 +184,7 @@ export async function requestWorkerHandoff(workerId: string): Promise<{ ok: bool
   const hp = handoffPath(workerId)
   mkdirSync(dirname(hp), { recursive: true })
   const localHandoff = join(getProfilesDir(), workerId, 'memory', 'handoffs', 'latest.md')
-  const prompt = `CONTEXT_HANDOFF_REQUIRED. Stop current work and write a durable handoff.\n\nWrite the handoff to BOTH of these exact paths:\n${localHandoff}\n${hp}\n\nUse this template (fill it in, do not just copy):\n# Handoff — ${workerId} — <missionId>\n\nGenerated: <ISO timestamp>\n\n## Current state\n## Objective\n## Completed\n## In progress\n## Files touched\n## Commands run\n## Blockers\n## Next exact action\n## Resume prompt\nWhen this worker restarts, load this handoff and continue from \"Next exact action\".\n\nThen reply in the required checkpoint format:\nSTATE: HANDOFF\nFILES_CHANGED: exact files or none\nCOMMANDS_RUN: exact commands or none\nRESULT: concise current state and what landed\nBLOCKER: blocker or none\nNEXT_ACTION: exact next action after /new or restart\n\nDo not continue implementation until renewed.`
+  const prompt = `CONTEXT_HANDOFF_REQUIRED. Stop current work and write a durable SitioUno Factory handoff.\n\nWrite the handoff to BOTH of these exact paths:\n${localHandoff}\n${hp}\n\nUse this template (fill it in, do not just copy):\n# Factory Handoff — ${workerId} — <missionId>\n\nGenerated: <ISO timestamp>\n\n## Current state\n## Objective\n## Completed\n## In progress\n## Files touched\n## Commands run\n## Blockers\n## Next exact action\n## Resume prompt\nWhen this worker restarts, load this handoff and continue from "Next exact action".\n\nThen reply in the required checkpoint format:\nSTATE: HANDOFF\nFILES_CHANGED: exact files or none\nCOMMANDS_RUN: exact commands or none\nRESULT: concise current state and what landed\nBLOCKER: blocker or none\nNEXT_ACTION: exact next action after /new or restart\n\nDo not continue implementation until renewed.`
   const sent = await sendTmux(workerId, prompt)
   const ctx = readRuntimeMissionContext(workerId)
   try {
@@ -222,7 +222,7 @@ function tmuxKill(workerId: string): Promise<{ ok: boolean; error?: string }> {
   const session = `swarm-${workerId}`
   return new Promise((resolve) => {
     execFile(tmuxBin(), ['kill-session', '-t', session], (err, _out, stderr) => {
-      if (err) return resolve({ ok: false, error: stderr?.toString() || err.message })
+      if (err) return resolve({ ok: false, error: stderr.toString() || err.message })
       resolve({ ok: true })
     })
   })
@@ -234,7 +234,7 @@ function tmuxStart(workerId: string): Promise<{ ok: boolean; error?: string }> {
   if (!existsSync(wrapper)) return Promise.resolve({ ok: false, error: `Wrapper not found: ${wrapper}` })
   return new Promise((resolve) => {
     execFile(tmuxBin(), ['new-session', '-d', '-s', session, wrapper], (err, _out, stderr) => {
-      if (err) return resolve({ ok: false, error: stderr?.toString() || err.message })
+      if (err) return resolve({ ok: false, error: stderr.toString() || err.message })
       resolve({ ok: true })
     })
   })
@@ -267,7 +267,7 @@ export async function renewWorker(workerId: string): Promise<{ ok: boolean; rest
       event: { handoffPath: hp, started: started.ok, resumeSent: sent.ok },
     })
   } catch { /* best-effort */ }
-  return { ok: started.ok && sent.ok, restarted: started.ok, resumeSent: sent.ok, error: sent.error, handoffPath: hp }
+  return { ok: sent.ok, restarted: started.ok, resumeSent: sent.ok, error: sent.error, handoffPath: hp }
 }
 
 export async function autoSweepLifecycle(workerIds: Array<string>): Promise<Array<{ workerId: string; action: 'none' | 'request-handoff' | 'renew'; status: SwarmLifecycleStatus; result?: { ok: boolean; error?: string } }>> {

@@ -1,10 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { createFileRoute } from '@tanstack/react-router'
+import { json } from '@tanstack/react-start'
 import { isAuthenticated } from '../../server/auth-middleware'
 import { getProfilesDir } from '../../server/claude-paths'
-import { newestCheckpointFromMessages, readRuntimeJson, type ParsedSwarmCheckpoint } from '../../server/swarm-checkpoints'
+import {  newestCheckpointFromMessages, readRuntimeJson } from '../../server/swarm-checkpoints'
 import { readWorkerMessages } from '../../server/swarm-chat-reader'
 import { getSwarmProfilePath, listSwarmWorkerIds } from '../../server/swarm-foundation'
 import { appendMissionContinuation, markMissionAssignmentsReviewedByWorker, recordMissionCheckpoint } from '../../server/swarm-missions'
@@ -12,6 +12,7 @@ import { appendSwarmMemoryEvent } from '../../server/swarm-memory'
 import { publishSwarmActionPrompt, publishSwarmCheckpointNotification } from '../../server/swarm-notifications'
 import { applySwarmModeToLoopFlags, readSwarmMode } from '../../server/swarm-mode'
 import { isSwarmWorkerId, readSwarmRoster } from '../../server/swarm-roster'
+import type {ParsedSwarmCheckpoint} from '../../server/swarm-checkpoints';
 
 type LoopRequest = {
   workerIds?: unknown
@@ -231,6 +232,9 @@ function chooseByRole(workerIds: Array<string>, pattern: RegExp): string | null 
 
 function chooseReviewer(workerIds: Array<string>, requested: unknown): string | null {
   if (typeof requested === 'string' && isSwarmWorkerId(requested)) return requested.trim()
+  if (workerIds.includes('quality-reviewer')) return 'quality-reviewer'
+  if (workerIds.includes('qa-verifier')) return 'qa-verifier'
+  if (workerIds.includes('security-reviewer')) return 'security-reviewer'
   if (workerIds.includes('reviewer')) return 'reviewer'
   if (workerIds.includes('swarm6')) return 'swarm6'
   return chooseByRole(workerIds, /review|qa|critic/i)
@@ -248,8 +252,8 @@ function buildReviewAssignment(results: Array<WorkerLoopResult>, reviewerId: str
   ].join('\n')).join('\n\n---\n\n')
   return {
     workerId: reviewerId,
-    rationale: 'Autopilot review gate for completed worker checkpoints.',
-    task: `Review these completed Swarm2 worker checkpoints. Do not edit files. Return the required checkpoint format. Decide if the workflow can continue, what the next task should be, and what regression risk remains.\n\n${summary}`,
+    rationale: 'Factory review gate for completed worker checkpoints.',
+    task: `Review these completed SitioUno Factory worker checkpoints. Do not edit files. Return the required checkpoint format. Decide if the workflow can continue, what the next task should be, and what regression risk remains.\n\n${summary}`,
   }
 }
 
