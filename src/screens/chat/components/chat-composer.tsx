@@ -72,7 +72,7 @@ type ChatComposerAttachment = {
   kind?: 'image' | 'file' | 'audio'
 }
 
-type ThinkingLevel = 'off' | 'low' | 'medium' | 'high'
+type ThinkingLevel = 'off' | 'low' | 'medium' | 'high' | 'adaptive'
 
 type ChatComposerProps = {
   onSubmit: (
@@ -114,7 +114,8 @@ type ChatComposerHandle = {
 
 function nextThinkingLevel(level: ThinkingLevel): ThinkingLevel {
   if (level === 'off') return 'low'
-  if (level === 'low') return 'medium'
+  if (level === 'low') return 'adaptive'
+  if (level === 'adaptive') return 'medium'
   if (level === 'medium') return 'high'
   return 'off'
 }
@@ -808,6 +809,7 @@ function shortPathLabel(pathValue: string): string {
 function thinkingLabel(level: ThinkingLevel): string {
   if (level === 'off') return 'None'
   if (level === 'low') return 'Low'
+  if (level === 'adaptive') return 'Adaptive'
   if (level === 'medium') return 'Medium'
   return 'High'
 }

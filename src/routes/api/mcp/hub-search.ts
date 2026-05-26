@@ -26,10 +26,8 @@ import type { SearchSource } from '../../../server/mcp-hub/index'
 
 const VALID_SOURCES = new Set(['all', 'mcp-get', 'local'])
 
-export const Route = createFileRoute('/api/mcp/hub-search')({
-  server: {
-    handlers: {
-      GET: async ({ request }) => {
+export const handlers = {
+  GET: async ({ request }: { request: Request }) => {
         if (!isAuthenticated(request)) {
           return Response.json(
             { ok: false, error: 'Unauthorized' },
@@ -76,7 +74,11 @@ export const Route = createFileRoute('/api/mcp/hub-search')({
             warnings: [safeErrorMessage(err)],
           })
         }
-      },
-    },
+  },
+}
+
+export const Route = createFileRoute('/api/mcp/hub-search')({
+  server: {
+    handlers,
   },
 })

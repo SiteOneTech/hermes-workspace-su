@@ -19,7 +19,7 @@ vi.mock('../../../server/mcp-hub/index', () => ({
 import { isAuthenticated } from '../../../server/auth-middleware'
 import { rateLimit, getClientIp, rateLimitResponse } from '../../../server/rate-limit'
 import { unifiedSearch } from '../../../server/mcp-hub/index'
-import { Route } from './hub-search'
+import { handlers } from './hub-search'
 
 const mockIsAuthenticated = vi.mocked(isAuthenticated)
 const mockRateLimit = vi.mocked(rateLimit)
@@ -31,9 +31,13 @@ function makeRequest(url: string): Request {
   return new Request(url)
 }
 
+async function readJson(res: Response): Promise<Record<string, any>> {
+  return await res.json() as Record<string, any>
+}
+
 async function callGet(url: string): Promise<Response> {
   const request = makeRequest(url)
-  const handler = Route.options.server?.handlers?.GET
+  const handler = handlers.GET
   if (!handler) throw new Error('No GET handler')
   return handler({ request } as Parameters<typeof handler>[0])
 }
@@ -53,7 +57,7 @@ describe('GET /api/mcp/hub-search — auth', () => {
     mockIsAuthenticated.mockReturnValue(false)
     const res = await callGet('http://localhost/api/mcp/hub-search?q=test')
     expect(res.status).toBe(401)
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(false)
   })
 
@@ -99,7 +103,7 @@ describe('GET /api/mcp/hub-search — response shape', () => {
     })
     const res = await callGet('http://localhost/api/mcp/hub-search?q=github')
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(true)
     expect(body.results).toHaveLength(1)
     expect(body.source).toBe('mcp-get')
@@ -114,14 +118,14 @@ describe('GET /api/mcp/hub-search — response shape', () => {
       warnings: ['mcp-get: network error: timeout'],
     })
     const res = await callGet('http://localhost/api/mcp/hub-search')
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.warnings).toHaveLength(1)
   })
 
   it('does not include warnings key when empty', async () => {
     mockUnifiedSearch.mockResolvedValue({ results: [], source: 'all', total: 0 })
     const res = await callGet('http://localhost/api/mcp/hub-search')
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.warnings).toBeUndefined()
   })
 
@@ -129,7 +133,7 @@ describe('GET /api/mcp/hub-search — response shape', () => {
     mockUnifiedSearch.mockRejectedValue(new Error('unexpected crash'))
     const res = await callGet('http://localhost/api/mcp/hub-search')
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(false)
     expect(body.results).toHaveLength(0)
     expect(body.source).toBe('error')

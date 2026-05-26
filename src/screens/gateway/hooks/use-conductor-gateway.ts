@@ -1646,11 +1646,13 @@ export function useConductorGateway() {
                 return key.startsWith(prefix)
               })
               if (match && typeof match.key === 'string') {
-                setOrchestratorSessionKey(match.key)
+                const previousOrchestratorKey = orchestratorKey
+                const nextOrchestratorKey = match.key
+                setOrchestratorSessionKey(nextOrchestratorKey)
                 setMissionWorkerKeys((current) => {
                   const next = new Set(current)
-                  next.delete(orchestratorKey)
-                  next.add(match.key as string)
+                  if (previousOrchestratorKey) next.delete(previousOrchestratorKey)
+                  next.add(nextOrchestratorKey)
                   return next
                 })
                 return

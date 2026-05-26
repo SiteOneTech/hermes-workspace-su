@@ -1,3 +1,13 @@
+import type {
+  DurableObjectNamespace,
+  DurableObjectState,
+  WebSocket as WorkerWebSocket,
+} from '@cloudflare/workers-types'
+
+declare const WebSocketPair: {
+  new (): { 0: WorkerWebSocket; 1: WorkerWebSocket }
+}
+
 /**
  * Hermes Playground multiplayer hub — Cloudflare Worker + Durable Object.
  *
@@ -73,7 +83,7 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const id = env.PLAYGROUND_HUB.idFromName('global')
     const stub = env.PLAYGROUND_HUB.get(id)
-    return stub.fetch(request)
+    return stub.fetch(request as never) as unknown as Response
   },
 }
 
@@ -285,7 +295,7 @@ export class PlaygroundHubV2 {
   }
 
   // ───── Hibernation-safe socket helpers ─────
-  attach(socket: WebSocket): SocketAttach {
+  attach(socket: WorkerWebSocket): SocketAttach {
     let attached = socket.deserializeAttachment() as SocketAttach | undefined
     if (!attached) {
       attached = {
@@ -298,16 +308,16 @@ export class PlaygroundHubV2 {
     return attached
   }
 
-  saveAttach(socket: WebSocket, a: SocketAttach) {
+  saveAttach(socket: WorkerWebSocket, a: SocketAttach) {
     socket.serializeAttachment(a)
   }
 
-  worldOf(socket: WebSocket): string | undefined {
+  worldOf(socket: WorkerWebSocket): string | undefined {
     const a = socket.deserializeAttachment() as SocketAttach | undefined
     return a?.world
   }
 
-  broadcast(origin: WebSocket | null, data: any, opts?: { world?: string }) {
+  broadcast(origin: WorkerWebSocket | null, data: any, opts?: { world?: string }) {
     const payload = typeof data === 'string' ? data : JSON.stringify(data)
     for (const sock of this.state.getWebSockets()) {
       if (sock === origin) continue
@@ -579,14 +589,14 @@ export class PlaygroundHubV2 {
         }
       } catch {}
 
-      return new Response(null, { status: 101, webSocket: client })
+      return new Response(null, { status: 101, webSocket: client } as ResponseInit & { webSocket: WorkerWebSocket })
     }
 
     return new Response('not found', { status: 404, headers: cors })
   }
 
   // ───── Hibernation event handlers ─────
-  async webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer) {
+  async webSocketMessage(socket: WorkerWebSocket, raw: string | ArrayBuffer) {
     const meta = this.attach(socket)
     if (!this.spend(meta)) {
       this.saveAttach(socket, meta)
@@ -694,7 +704,7 @@ export class PlaygroundHubV2 {
     }
   }
 
-  async webSocketClose(socket: WebSocket, _code: number, _reason: string, _wasClean: boolean) {
+  async webSocketClose(socket: WorkerWebSocket, _code: number, _reason: string, _wasClean: boolean) {
     // Hibernation API closes don't necessarily mean the user left — they could
     // be the DO hibernating mid-session. Just age the presence; the alarm prune
     // will clean it up after STALE_AFTER_MS if no reconnect happens.
@@ -709,7 +719,7 @@ export class PlaygroundHubV2 {
     }
   }
 
-  async webSocketError(socket: WebSocket, _err: unknown) {
+  async webSocketError(socket: WorkerWebSocket, _err: unknown) {
     // Same treatment as close — let prune handle the actual disappearance.
     return this.webSocketClose(socket, 0, '', false)
   }

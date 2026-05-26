@@ -135,8 +135,9 @@ export async function fetchWorkflowJson<T>(url: string): Promise<T> {
     | T
     | ApiErrorResponse
     | null
-  if (!res.ok || (data && 'ok' in data && data.ok === false)) {
-    throw new Error(data && 'error' in data ? data.error : `HTTP ${res.status}`)
+  const isObject = data !== null && typeof data === 'object'
+  if (!res.ok || (isObject && 'ok' in data && data.ok === false)) {
+    throw new Error(isObject && 'error' in data && typeof data.error === 'string' ? data.error : `HTTP ${res.status}`)
   }
   return data as T
 }

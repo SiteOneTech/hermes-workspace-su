@@ -39,6 +39,10 @@ function makeRequest(method: string, url: string, body?: unknown): Request {
   })
 }
 
+async function readJson(res: Response): Promise<Record<string, any>> {
+  return await res.json() as Record<string, any>
+}
+
 async function callGet(request: Request) {
   const handlers = HubSourcesRoute.options.server?.handlers as Record<string, (ctx: { request: Request }) => Promise<Response>>
   return handlers['GET']({ request })
@@ -70,13 +74,13 @@ describe('GET /api/mcp/hub-sources', () => {
     mockIsAuthenticated.mockReturnValue(false)
     const res = await callGet(makeRequest('GET', 'http://localhost/api/mcp/hub-sources'))
     expect(res.status).toBe(401)
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(false)
   })
 
   it('returns built-in sources on seed', async () => {
     const res = await callGet(makeRequest('GET', 'http://localhost/api/mcp/hub-sources'))
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(true)
     expect(body.sources).toHaveLength(2)
     expect(body.source).toBe('seed')
@@ -90,7 +94,7 @@ describe('GET /api/mcp/hub-sources', () => {
       validationErrors: [{ path: 'version', message: 'version must be 1' }],
     })
     const res = await callGet(makeRequest('GET', 'http://localhost/api/mcp/hub-sources'))
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(false)
     expect(body.error).toBeTruthy()
     expect(body.validationErrors).toHaveLength(1)
@@ -108,7 +112,7 @@ describe('POST /api/mcp/hub-sources', () => {
     const newSource = { id: 'corp', name: 'Corp', url: 'https://corp.example.com', trust: 'official', format: 'generic-json', enabled: true }
     mockAddHubSource.mockResolvedValue({ ok: true, sources: [...BUILTIN_SOURCES, newSource] as never })
     const res = await callPost(makeRequest('POST', 'http://localhost/api/mcp/hub-sources', newSource))
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(true)
     expect(body.sources).toHaveLength(3)
   })
@@ -116,7 +120,7 @@ describe('POST /api/mcp/hub-sources', () => {
   it('returns ok:false + errors on bad input', async () => {
     mockAddHubSource.mockResolvedValue({ ok: false, errors: [{ path: 'url', message: 'url must use https://' }] })
     const res = await callPost(makeRequest('POST', 'http://localhost/api/mcp/hub-sources', { id: 'bad', url: 'http://insecure.com' }))
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(false)
     expect(body.errors).toHaveLength(1)
   })
@@ -128,7 +132,7 @@ describe('POST /api/mcp/hub-sources', () => {
       body: 'not-json{{',
     })
     const res = await callPost(req)
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(false)
   })
 })
@@ -146,7 +150,7 @@ describe('PUT /api/mcp/hub-sources/:id', () => {
       makeRequest('PUT', 'http://localhost/api/mcp/hub-sources/corp', { name: 'New', url: 'https://new.example.com', trust: 'community', format: 'generic-json', enabled: true }),
       'corp',
     )
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(true)
   })
 
@@ -154,14 +158,14 @@ describe('PUT /api/mcp/hub-sources/:id', () => {
     mockUpdateHubSource.mockResolvedValue({ ok: false, errors: [{ path: 'id', message: 'source "nope" not found' }], status: 404 })
     const res = await callPut(makeRequest('PUT', 'http://localhost/api/mcp/hub-sources/nope', { name: 'X', url: 'https://x.com', trust: 'community', format: 'generic-json', enabled: true }), 'nope')
     expect(res.status).toBe(404)
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(false)
   })
 
   it('returns ok:false + errors on validation failure', async () => {
     mockUpdateHubSource.mockResolvedValue({ ok: false, errors: [{ path: 'url', message: 'url must use https://' }] })
     const res = await callPut(makeRequest('PUT', 'http://localhost/api/mcp/hub-sources/corp', { url: 'http://insecure.com' }), 'corp')
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(false)
     expect(body.errors).toBeDefined()
   })
@@ -177,7 +181,7 @@ describe('DELETE /api/mcp/hub-sources/:id', () => {
   it('deletes a source and returns updated list', async () => {
     mockDeleteHubSource.mockResolvedValue({ ok: true, sources: BUILTIN_SOURCES as never })
     const res = await callDelete(makeRequest('DELETE', 'http://localhost/api/mcp/hub-sources/corp'), 'corp')
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(true)
   })
 
@@ -190,7 +194,7 @@ describe('DELETE /api/mcp/hub-sources/:id', () => {
   it('rejects deletion of built-in sources', async () => {
     mockDeleteHubSource.mockResolvedValue({ ok: false, errors: [{ path: 'id', message: '"mcp-get" is a built-in source and cannot be removed' }], status: 400 })
     const res = await callDelete(makeRequest('DELETE', 'http://localhost/api/mcp/hub-sources/mcp-get'), 'mcp-get')
-    const body = await res.json()
+    const body = await readJson(res)
     expect(body.ok).toBe(false)
   })
 })

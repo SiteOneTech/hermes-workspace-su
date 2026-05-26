@@ -36,10 +36,10 @@ export const Route = createFileRoute('/api/oauth/device-code')({
                 body: 'client_id=claude-cli',
               },
             )
-            const data = await res.json()
+            const data = await res.json() as Record<string, unknown>
             if (!res.ok) {
               return json(
-                { error: data.error || 'Device code request failed' },
+                { error: typeof data.error === 'string' ? data.error : 'Device code request failed' },
                 { status: res.status },
               )
             }

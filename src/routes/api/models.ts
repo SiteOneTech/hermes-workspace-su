@@ -27,6 +27,15 @@ type ModelEntry = {
   [key: string]: unknown
 }
 
+type ModelEntryInput = ModelEntry | string
+
+type NormalizedModelEntry = {
+  provider: string
+  id: string
+  name: string
+  [key: string]: unknown
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === 'object' && !Array.isArray(value))
     return value as Record<string, unknown>
@@ -37,7 +46,7 @@ function readString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-function normalizeModel(entry: unknown): ModelEntry | null {
+function normalizeModel(entry: unknown): NormalizedModelEntry | null {
   if (typeof entry === 'string') {
     const id = entry.trim()
     if (!id) return null
@@ -66,7 +75,7 @@ function normalizeModel(entry: unknown): ModelEntry | null {
   }
 }
 
-export function mergeModelEntries(...sources: Array<Array<ModelEntry>>): Array<ModelEntry> {
+export function mergeModelEntries(...sources: Array<Array<ModelEntryInput>>): Array<ModelEntry> {
   const merged: Array<ModelEntry> = []
   const seen = new Set<string>()
 
@@ -186,7 +195,7 @@ async function fetchClaudeModels(): Promise<Array<ModelEntry>> {
       : []
   return rawModels
     .map(normalizeModel)
-    .filter((e): e is ModelEntry => e !== null)
+    .filter((e): e is NormalizedModelEntry => e !== null)
 }
 
 export const Route = createFileRoute('/api/models')({

@@ -4,6 +4,7 @@ import {
   createReservation,
   createSupabaseReservationStore,
   ReservationValidationError,
+  type ReservationInput,
   sendReservationConfirmationEmail,
 } from '@/server/name-reservations'
 import {
@@ -44,7 +45,7 @@ export const Route = createFileRoute('/api/hermesworld/reservations')({
         }
 
         try {
-          const body = await request.json()
+          const body = await request.json() as ReservationInput
           const store = createSupabaseReservationStore()
           const reservation = await createReservation(body, {
             store,

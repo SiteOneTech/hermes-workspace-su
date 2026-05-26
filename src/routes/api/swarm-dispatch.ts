@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { execFile } from 'node:child_process'
+import type { ExecFileException } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -909,9 +910,8 @@ function runWorker(assignment: AssignmentRequest, timeoutMs: number, roster: Swa
         timeout: timeoutMs,
         maxBuffer: MAX_OUTPUT_CHARS,
         killSignal: 'SIGTERM',
-        input: prompt,
       },
-      (error, stdout, stderr) => {
+      (error: ExecFileException | null, stdout: string | Buffer, stderr: string | Buffer) => {
         const durationMs = Date.now() - startedAt
         const stdoutStr = (stdout || '').toString()
         const stderrStr = (stderr || '').toString()
@@ -988,6 +988,10 @@ function runWorker(assignment: AssignmentRequest, timeoutMs: number, roster: Swa
         resolve(result)
       },
     )
+
+    if (!useWrapper && proc.stdin) {
+      proc.stdin.end(prompt)
+    }
 
     proc.on('error', (error) => {
       const result: WorkerResult = {

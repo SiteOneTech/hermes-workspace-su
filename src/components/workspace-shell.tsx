@@ -198,10 +198,11 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     pathname.startsWith('/hermes-world/') ||
     pathname === '/world' ||
     pathname.startsWith('/world/')
+  const searchParams = search as Record<string, unknown> | undefined
   const isEmbeddedSurface =
-    search?.embed === '1' ||
-    search?.embed === 'true' ||
-    search?.mode === 'embed'
+    searchParams?.embed === '1' ||
+    searchParams?.embed === 'true' ||
+    searchParams?.mode === 'embed'
   const isChromeFreeSurface = isEmbeddedSurface || isOnHermesWorldLandingRoute
   const hideChatSidebar = isOnChatRoute && chatFocusMode
   const showDesktopSidebarBackdrop =
