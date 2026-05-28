@@ -13,6 +13,9 @@ export type CrewMember = {
   role: string
   specialty?: string
   mission?: string
+  description?: string
+  avatarImage?: string
+  costTier?: 'budget' | 'balanced' | 'premium'
   skills?: Array<string>
   capabilities?: Array<string>
   profileFound: boolean

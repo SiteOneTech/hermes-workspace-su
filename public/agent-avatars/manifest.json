@@ -1,0 +1,92 @@
+[
+  {
+    "id": "orchestrator",
+    "path": "/agent-avatars/orchestrator.webp",
+    "provider": "higgsfield",
+    "model": "gpt_image_2",
+    "bytes": 47822,
+    "status": "generated",
+    "sourcePngBytes": 7796931
+  },
+  {
+    "id": "km-agent",
+    "path": "/agent-avatars/km-agent.webp",
+    "provider": "higgsfield",
+    "model": "gpt_image_2",
+    "bytes": 52794,
+    "status": "generated",
+    "sourcePngBytes": 8954456
+  },
+  {
+    "id": "builder",
+    "path": "/agent-avatars/builder.webp",
+    "provider": "higgsfield",
+    "model": "gpt_image_2",
+    "bytes": 56714,
+    "status": "generated",
+    "sourcePngBytes": 9297778
+  },
+  {
+    "id": "reviewer",
+    "path": "/agent-avatars/reviewer.webp",
+    "provider": "higgsfield",
+    "model": "gpt_image_2",
+    "bytes": 36480,
+    "status": "generated",
+    "sourcePngBytes": 7889347
+  },
+  {
+    "id": "qa",
+    "path": "/agent-avatars/qa.webp",
+    "provider": "higgsfield",
+    "model": "gpt_image_2",
+    "bytes": 39942,
+    "status": "generated",
+    "sourcePngBytes": 7982772
+  },
+  {
+    "id": "researcher",
+    "path": "/agent-avatars/researcher.webp",
+    "provider": "higgsfield",
+    "model": "gpt_image_2",
+    "bytes": 42286,
+    "status": "generated",
+    "sourcePngBytes": 8530931
+  },
+  {
+    "id": "ops-watch",
+    "path": "/agent-avatars/ops-watch.webp",
+    "provider": "higgsfield",
+    "model": "gpt_image_2",
+    "bytes": 34740,
+    "status": "generated",
+    "sourcePngBytes": 7110517
+  },
+  {
+    "id": "maintainer",
+    "path": "/agent-avatars/maintainer.webp",
+    "provider": "higgsfield",
+    "model": "gpt_image_2",
+    "bytes": 34838,
+    "status": "generated",
+    "sourcePngBytes": 7976242
+  },
+  {
+    "id": "strategist",
+    "path": "/agent-avatars/strategist.webp",
+    "provider": "openai-fallback",
+    "model": "gpt-image-2-medium",
+    "bytes": 41222,
+    "status": "generated",
+    "sourcePngBytes": 1551739
+  },
+  {
+    "id": "inbox-triage",
+    "path": "/agent-avatars/inbox-triage.webp",
+    "provider": "openai-fallback",
+    "model": "gpt-image-2-medium",
+    "bytes": 33476,
+    "status": "generated",
+    "sourcePngBytes": 1367651
+  }
+]

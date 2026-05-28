@@ -10,13 +10,14 @@ import {
   ComputerTerminal01Icon,
   Settings01Icon,
 } from '@hugeicons/core-free-icons'
-import { AgentProgress } from '@/components/agent-view/agent-progress'
-import { PixelAvatar } from '@/components/agent-swarm/pixel-avatar'
 import { useQuery } from '@tanstack/react-query'
-import { Swarm2Artifacts, type Swarm2Artifact, type Swarm2Preview } from './swarm2-artifacts'
+import {  Swarm2Artifacts  } from './swarm2-artifacts'
 import { Swarm2LiveChat } from './swarm2-live-chat'
 import { Swarm2TaskQueue } from './swarm2-task-queue'
+import type {Swarm2Artifact, Swarm2Preview} from './swarm2-artifacts';
 import type { CrewMember } from '@/hooks/use-crew-status'
+import { PixelAvatar } from '@/components/agent-swarm/pixel-avatar'
+import { AgentProgress } from '@/components/agent-view/agent-progress'
 import { getOnlineStatus } from '@/hooks/use-crew-status'
 import { cn } from '@/lib/utils'
 
@@ -170,6 +171,8 @@ function formatAssignedModel(model?: string | null, provider?: string | null): s
   if (value.includes('gpt-5.5')) return 'GPT-5.5'
   if (value.includes('gpt-5.4')) return 'GPT-5.4'
   if (value.includes('gpt-5.3')) return 'GPT-5.3'
+  if (value.includes('minimax-m2.7-highspeed')) return 'MiniMax 2.7 Hyperfast'
+  if (value.includes('minimax')) return 'MiniMax'
   if (model && model !== 'unknown') return model
   if (provider && provider !== 'unknown') return provider.replace(/^custom:/, '').replace(/[-_]/g, ' ')
   return 'Worker'
@@ -180,6 +183,7 @@ type WorkerCardSettings = {
   role?: string
   modelLabel?: string
   avatarGlyph?: string
+  avatarImage?: string
 }
 
 const SETTINGS_STORAGE_PREFIX = 'claude-swarm2-card-settings:'
@@ -279,7 +283,9 @@ export function OperationalWorkerCard({
     state === 'idle' || state === 'offline' ? 8 : state === 'waiting' ? 38 : 68
   const baseModelLabel = formatAssignedModel(member.model, member.provider)
   const modelLabel = settings.modelLabel || baseModelLabel
+  const avatarImage = settings.avatarImage || member.avatarImage || ''
   const avatarGlyph = settings.avatarGlyph || ''
+  const description = member.description || member.mission || member.specialty || ''
   const outputFreshness = relativeOutputTime(recentOutputAt)
   const focusPanels = useMemo(() => {
     const panels: Array<{
@@ -344,8 +350,8 @@ export function OperationalWorkerCard({
     setDraftName(settings.displayName || member.displayName || '')
     setDraftRole(settings.role || member.role || roleFromId(member.id))
     setDraftModel(settings.modelLabel || baseModelLabel)
-    setDraftAvatar(settings.avatarGlyph || '')
-  }, [settingsOpen, settings, member.displayName, member.role, member.id, baseModelLabel])
+    setDraftAvatar(settings.avatarImage || settings.avatarGlyph || member.avatarImage || '')
+  }, [settingsOpen, settings, member.displayName, member.role, member.id, member.avatarImage, baseModelLabel])
 
   useEffect(() => {
     if (!selected) return
@@ -388,7 +394,13 @@ export function OperationalWorkerCard({
         <div className="flex w-full justify-center px-28">
           <h3 className="min-w-0 text-center text-sm font-semibold text-[var(--theme-text)]">
             <span className="inline-flex max-w-full items-center justify-center gap-2">
-              {avatarGlyph ? <span>{avatarGlyph}</span> : null}
+              {avatarImage ? (
+                <img
+                  src={avatarImage}
+                  alt=""
+                  className="size-6 rounded-full border border-[var(--theme-border)] object-cover"
+                />
+              ) : avatarGlyph ? <span>{avatarGlyph}</span> : null}
               <span className="truncate">{displayName}</span>
               <span
                 className={cn(
@@ -445,17 +457,31 @@ export function OperationalWorkerCard({
             className={status.ring}
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <PixelAvatar
-              size={36}
-              color={colorForWorker(member.id)}
-              accentColor="#ffffff"
-              status={status.avatar}
-            />
+            {avatarImage ? (
+              <img
+                src={avatarImage}
+                alt={`${displayName} avatar`}
+                className="size-9 rounded-full object-cover shadow-inner"
+              />
+            ) : (
+              <PixelAvatar
+                size={36}
+                color={colorForWorker(member.id)}
+                accentColor="#ffffff"
+                status={status.avatar}
+              />
+            )}
           </div>
         </div>
 
 
       </div>
+
+      {description ? (
+        <p className="mb-2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg)]/70 px-3 py-2 text-center text-[11px] leading-relaxed text-[var(--theme-muted)]">
+          {description}
+        </p>
+      ) : null}
 
       {!member.profileFound ? (
         <div className="mb-2 rounded-xl border border-amber-400/35 bg-amber-500/10 px-3 py-2 text-center text-[11px] text-amber-200">
@@ -495,9 +521,9 @@ export function OperationalWorkerCard({
               <HugeiconsIcon icon={ArrowLeft01Icon} size={11} />
             </button>
             <div className="min-w-0 flex-1 text-center">
-              <div className="truncate">{activeFocusPanel?.label ?? 'Panel'}</div>
+              <div className="truncate">{activeFocusPanel.label}</div>
               <div className="truncate text-[10px] font-medium normal-case tracking-normal text-[var(--theme-muted)]/80">
-                {activeFocusPanel?.meta ?? outputFreshness}
+                {activeFocusPanel.meta || outputFreshness}
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -525,7 +551,7 @@ export function OperationalWorkerCard({
           </div>
 
           <p className="mb-2 mx-auto max-w-2xl text-center text-[11px] leading-relaxed text-[var(--theme-muted)]">
-            {activeFocusPanel?.helper ?? 'Worker details'}
+            {activeFocusPanel.helper}
           </p>
 
           {focusPanel === 'tasks' ? (
@@ -630,19 +656,23 @@ export function OperationalWorkerCard({
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[var(--theme-muted)]">Avatar glyph</span>
-                <select
+                <span className="mb-1 block text-[var(--theme-muted)]">Avatar image or glyph</span>
+                <input
                   value={draftAvatar}
                   onChange={(event) => setDraftAvatar(event.target.value)}
+                  list={`avatar-options-${member.id}`}
                   className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2 text-[var(--theme-text)] outline-none"
-                >
+                  placeholder={member.avatarImage || 'Emoji or /agent-avatars/name.webp'}
+                />
+                <datalist id={`avatar-options-${member.id}`}>
                   <option value="">None</option>
+                  {member.avatarImage ? <option value={member.avatarImage}>Default generated avatar</option> : null}
                   {AVATAR_OPTIONS.filter(Boolean).map((option) => (
                     <option key={option} value={option}>
                       {option}
                     </option>
                   ))}
-                </select>
+                </datalist>
               </label>
               <label className="block">
                 <span className="mb-1 block text-[var(--theme-muted)]">Role</span>
@@ -702,9 +732,11 @@ export function OperationalWorkerCard({
                   type="button"
                   className="rounded-xl bg-[var(--theme-accent)] px-3 py-2 text-[11px] font-semibold text-primary-950 hover:bg-[var(--theme-accent-strong)]"
                   onClick={() => {
+                    const avatarDraft = draftAvatar.trim()
                     const next: WorkerCardSettings = {
                       displayName: draftName.trim() || undefined,
-                      avatarGlyph: draftAvatar.trim() || undefined,
+                      avatarGlyph: avatarDraft && !avatarDraft.includes('/') && !avatarDraft.startsWith('http') ? avatarDraft : undefined,
+                      avatarImage: avatarDraft && (avatarDraft.includes('/') || avatarDraft.startsWith('http')) ? avatarDraft : undefined,
                       role: draftRole.trim() || undefined,
                       modelLabel: draftModel.trim() || undefined,
                     }

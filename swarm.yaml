@@ -3,9 +3,11 @@ workers:
 - id: orchestrator
   name: Orchestrator
   role: Swarm Orchestrator / Greenlight Gate
-  specialty: mission routing, task decomposition, handoffs, proof contracts, human approval gates
+  specialty: mission routing, task decomposition, handoffs, proof contracts, human
+    approval gates
   model: GPT-5.5
-  mission: Decompose missions into safe, proof-bearing work and route to the right specialist while preserving human greenlight control.
+  mission: Decompose missions into safe, proof-bearing work and route to the right
+    specialist while preserving human greenlight control.
   profile: orchestrator
   modes:
   - plan
@@ -55,12 +57,20 @@ workers:
   mcpServers:
   - gbrain
   wrapper: orchestrator:plan
+  description: CEO-style control plane for mission routing, task decomposition, handoffs,
+    proof contracts, and human greenlight gates. Uses premium reasoning because it
+    owns coordination risk.
+  avatarImage: /agent-avatars/orchestrator.webp
+  provider: openai-codex
+  costTier: premium
 - id: km-agent
   name: KM Agent
   role: RAZSOC / GBrain Knowledge Steward
-  specialty: RAZSOC, GBrain, Obsidian, TaskNotes, graph health, durable knowledge capture, drift audits
-  model: GPT-5.5
-  mission: Keep the operating brain coherent, searchable, and source-of-record aligned without polluting durable knowledge.
+  specialty: RAZSOC, GBrain, Obsidian, TaskNotes, graph health, durable knowledge
+    capture, drift audits
+  model: MiniMax-M2.7-highspeed
+  mission: Keep the operating brain coherent, searchable, and source-of-record aligned
+    without polluting durable knowledge.
   profile: km-agent
   modes:
   - health
@@ -107,12 +117,18 @@ workers:
   mcpServers:
   - gbrain
   wrapper: km:health
+  description: 'Knowledge steward for RAZSOC/GBrain/Obsidian hygiene: keeps durable
+    context coherent, searchable, and source-of-record aligned.'
+  avatarImage: /agent-avatars/km-agent.webp
+  provider: minimax-oauth
+  costTier: budget
 - id: builder
   name: Builder
   role: Scoped Implementation Agent
   specialty: focused implementation, tests, small diffs, integration fixes
   model: GPT-5.5
-  mission: Ship scoped product/code slices with tests, minimal diffs, and clear verification evidence.
+  mission: Ship scoped product/code slices with tests, minimal diffs, and clear verification
+    evidence.
   profile: builder
   modes:
   - task
@@ -157,12 +173,18 @@ workers:
   mcpServers:
   - gbrain
   wrapper: builder:task
+  description: Scoped implementation worker for focused product/code slices, integration
+    fixes, tests, and small diffs with concrete verification evidence.
+  avatarImage: /agent-avatars/builder.webp
+  provider: openai-codex
+  costTier: balanced
 - id: reviewer
   name: Reviewer
   role: Independent Review / Merge Gate
   specialty: security review, logic review, regression detection, quality gates
   model: GPT-5.5
-  mission: Independently review changes and block unsafe, untested, or logically broken work before it lands.
+  mission: Independently review changes and block unsafe, untested, or logically broken
+    work before it lands.
   profile: reviewer
   modes:
   - gate
@@ -205,12 +227,19 @@ workers:
   mcpServers:
   - gbrain
   wrapper: reviewer:gate
+  description: 'Independent review and merge gate: checks security, logic, regressions,
+    spec compliance, and blocks unsafe or untested changes.'
+  avatarImage: /agent-avatars/reviewer.webp
+  provider: openai-codex
+  costTier: balanced
 - id: qa
   name: QA
   role: Browser / Workflow / CLI Smoke Verification
-  specialty: browser QA, workflow smoke tests, expected-vs-actual checks, regression reproduction
-  model: GPT-5.5
-  mission: Verify user-visible behavior with concrete smoke evidence and concise bug reports.
+  specialty: browser QA, workflow smoke tests, expected-vs-actual checks, regression
+    reproduction
+  model: MiniMax-M2.7-highspeed
+  mission: Verify user-visible behavior with concrete smoke evidence and concise bug
+    reports.
   profile: qa
   modes:
   - smoke
@@ -250,12 +279,19 @@ workers:
   mcpServers:
   - gbrain
   wrapper: qa:smoke
+  description: Low-cost smoke verification worker for browser checks, CLI checks,
+    expected-vs-actual evidence, and concise bug reports.
+  avatarImage: /agent-avatars/qa.webp
+  provider: minimax-oauth
+  costTier: budget
 - id: researcher
   name: Researcher
   role: Brain-first Research / Bounded Autoresearch
-  specialty: GBrain-first lookup, external research, synthesis, source trails, bounded research loops
-  model: GPT-5.5
-  mission: Produce decision-grade research with brain-first context, external verification, and explicit uncertainty.
+  specialty: GBrain-first lookup, external research, synthesis, source trails, bounded
+    research loops
+  model: MiniMax-M2.7-highspeed
+  mission: Produce decision-grade research with brain-first context, external verification,
+    and explicit uncertainty.
   profile: researcher
   modes:
   - quick
@@ -304,12 +340,19 @@ workers:
   mcpServers:
   - gbrain
   wrapper: researcher:quick
+  description: Low-cost bounded research agent for GBrain-first lookup, external verification,
+    synthesis, source trails, and uncertainty framing.
+  avatarImage: /agent-avatars/researcher.webp
+  provider: minimax-oauth
+  costTier: budget
 - id: ops-watch
   name: Ops Watch
   role: Local Infra / Runtime Health Watch
-  specialty: gateway health, cron, MCP, workspace services, local process status, boring reliability
-  model: GPT-5.5
-  mission: Keep Hermes, Workspace, GBrain, gateway, cron, and local services observable and healthy with quiet, low-risk checks.
+  specialty: gateway health, cron, MCP, workspace services, local process status,
+    boring reliability
+  model: MiniMax-M2.7-highspeed
+  mission: Keep Hermes, Workspace, GBrain, gateway, cron, and local services observable
+    and healthy with quiet, low-risk checks.
   profile: ops-watch
   modes:
   - health
@@ -352,12 +395,19 @@ workers:
   mcpServers:
   - gbrain
   wrapper: ops:health
+  description: Low-risk operations sentinel for Hermes, gateway, cron, MCP, local
+    services, process lifecycle, and quiet reliability checks.
+  avatarImage: /agent-avatars/ops-watch.webp
+  provider: minimax-oauth
+  costTier: budget
 - id: maintainer
   name: Maintainer
   role: Upstream Dependency / Patch Hygiene
-  specialty: upstream tracking, local patch hygiene, dependency updates, PR/issue follow-through
-  model: GPT-5.5
-  mission: Keep local forks and upstream dependencies healthy without losing local patches or dirty-worktree context.
+  specialty: upstream tracking, local patch hygiene, dependency updates, PR/issue
+    follow-through
+  model: MiniMax-M2.7-highspeed
+  mission: Keep local forks and upstream dependencies healthy without losing local
+    patches or dirty-worktree context.
   profile: maintainer
   modes:
   - check
@@ -402,12 +452,19 @@ workers:
   mcpServers:
   - gbrain
   wrapper: maintainer:check
+  description: Low-cost patch hygiene and upstream-tracking agent for forks, dependencies,
+    release notes, and local change preservation.
+  avatarImage: /agent-avatars/maintainer.webp
+  provider: minimax-oauth
+  costTier: budget
 - id: strategist
   name: Strategist
   role: Wedges / Bets / Kill Criteria
-  specialty: operating plans, gstack-style wedges, strategy reviews, decision framing, kill criteria
-  model: GPT-5.5
-  mission: Turn ambiguity into crisp wedges, bets, constraints, and kill criteria without over-planning.
+  specialty: operating plans, gstack-style wedges, strategy reviews, decision framing,
+    kill criteria
+  model: MiniMax-M2.7-highspeed
+  mission: Turn ambiguity into crisp wedges, bets, constraints, and kill criteria
+    without over-planning.
   profile: strategist
   modes:
   - review
@@ -448,12 +505,19 @@ workers:
   mcpServers:
   - gbrain
   wrapper: strategist:review
+  description: Low-cost strategy reviewer for wedges, bets, prioritization, kill criteria,
+    and decision framing before execution.
+  avatarImage: /agent-avatars/strategist.webp
+  provider: minimax-oauth
+  costTier: budget
 - id: inbox-triage
   name: Inbox Triage
   role: Capture / Discard / Route / Task Triage
-  specialty: low-friction inbox processing, capture routing, task/research/defer decisions, durable-context filtering
-  model: GPT-5.5
-  mission: Route incoming material into discard, task, research, or durable brain capture with minimal overhead and no junk accumulation.
+  specialty: low-friction inbox processing, capture routing, task/research/defer decisions,
+    durable-context filtering
+  model: MiniMax-M2.7-highspeed
+  mission: Route incoming material into discard, task, research, or durable brain
+    capture with minimal overhead and no junk accumulation.
   profile: inbox-triage
   modes:
   - triage
@@ -496,3 +560,8 @@ workers:
   mcpServers:
   - gbrain
   wrapper: inbox:triage
+  description: Low-cost capture router that classifies incoming material into discard,
+    task, research, defer, or durable brain capture.
+  avatarImage: /agent-avatars/inbox-triage.webp
+  provider: minimax-oauth
+  costTier: budget
