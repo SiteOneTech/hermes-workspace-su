@@ -24,6 +24,7 @@ type ProfileSummary = {
   name: string
   displayName?: string
   avatarDataUrl?: string | null
+  avatarImage?: string
   path: string
   active: boolean
   exists: boolean
@@ -43,6 +44,7 @@ type ProfileDetail = {
   name: string
   displayName?: string
   avatarDataUrl?: string | null
+  avatarImage?: string
   path: string
   active: boolean
   config: Record<string, unknown>
@@ -199,8 +201,8 @@ export function ProfilesScreen() {
   }, [createOpen, wizardStep, allModels.length, fetchAllModels])
 
   useEffect(() => {
-    setDescriptionDraft(detailQuery.data?.profile?.description ?? '')
-  }, [detailQuery.data?.profile?.description, detailsName])
+    setDescriptionDraft(detailQuery.data?.profile.description ?? '')
+  }, [detailQuery.data?.profile.description, detailsName])
 
   const nameValid =
     /^[A-Za-z0-9_-]+$/.test(newProfileName.trim()) &&
@@ -459,7 +461,7 @@ export function ProfilesScreen() {
                     )}
                   >
                     <img
-                      src={profile.avatarDataUrl || '/claude-avatar.webp'}
+                      src={profile.avatarDataUrl || profile.avatarImage || '/claude-avatar.webp'}
                       alt={profileDisplayLabel(profile)}
                       className={cn(
                         'size-20 rounded-full border-2 object-cover',
@@ -1085,7 +1087,7 @@ export function ProfilesScreen() {
               disabled={
                 !identityTarget ||
                 identityProcessing ||
-                busyName === identityTarget?.name
+                busyName === identityTarget.name
               }
             >
               Save identity
@@ -1105,7 +1107,8 @@ export function ProfilesScreen() {
               <div className="flex min-w-0 items-center gap-3">
                 <img
                   src={
-                    detailQuery.data?.profile?.avatarDataUrl ||
+                    detailQuery.data?.profile.avatarDataUrl ||
+                    detailQuery.data?.profile.avatarImage ||
                     '/claude-avatar.webp'
                   }
                   alt={

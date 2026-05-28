@@ -2,10 +2,12 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import YAML from 'yaml'
+import { getBuiltInProfileMetadata } from './profile-metadata'
 
 export type ProfileIdentity = {
   displayName?: string
   avatarDataUrl?: string | null
+  avatarImage?: string
 }
 
 export type ProfileSummary = ProfileIdentity & {
@@ -309,6 +311,7 @@ async function fetchDashboardProfiles(): Promise<{
         model?: string
         provider?: string
         description?: string
+        avatarImage?: string
         is_default?: boolean
         skill_count?: number
         session_count?: number
@@ -322,8 +325,12 @@ async function fetchDashboardProfiles(): Promise<{
     const activeProfile =
       data.profiles.find((p) => p.is_default)?.name || 'default'
 
-    const profiles: Array<ProfileSummary> = data.profiles.map((p) => ({
+    const profiles: Array<ProfileSummary> = data.profiles.map((p) => {
+      const builtInMetadata = getBuiltInProfileMetadata(p.name)
+      return {
       name: p.name,
+      displayName: builtInMetadata.displayName,
+      avatarImage: p.avatarImage || builtInMetadata.avatarImage,
       path: p.is_default
         ? getClaudeRoot()
         : path.join(getProfilesRoot(), p.name),
@@ -331,12 +338,13 @@ async function fetchDashboardProfiles(): Promise<{
       exists: true,
       model: p.model,
       provider: p.provider,
-      description: p.description,
+      description: p.description || builtInMetadata.description,
       skillCount: p.skill_count ?? 0,
       sessionCount: p.session_count ?? 0,
       hasEnv: p.has_env ?? false,
       updatedAt: p.updated_at,
-    }))
+      }
+    })
 
     profiles.sort((a, b) => {
       if (a.active && !b.active) return -1
@@ -407,6 +415,7 @@ export async function readProfileWithFallback(
             model?: string
             provider?: string
             description?: string
+            avatarImage?: string
             is_default?: boolean
           }>
         }
@@ -415,8 +424,11 @@ export async function readProfileWithFallback(
         )
         if (match) {
           const active = getActiveProfileName()
+          const builtInMetadata = getBuiltInProfileMetadata(match.name)
           return {
             name: match.name,
+            displayName: builtInMetadata.displayName,
+            avatarImage: match.avatarImage || builtInMetadata.avatarImage,
             path: match.is_default
               ? getClaudeRoot()
               : path.join(getProfilesRoot(), match.name),
@@ -425,7 +437,7 @@ export async function readProfileWithFallback(
               ...(match.model ? { model: match.model } : {}),
               ...(match.provider ? { provider: match.provider } : {}),
             },
-            description: match.description || '',
+            description: match.description || builtInMetadata.description || '',
             hasEnv: false,
           }
         }
@@ -480,6 +492,7 @@ export function listProfiles(): Array<ProfileSummary> {
       const sessionsDir = path.join(profilePath, 'sessions')
       const config = readYamlConfig(configPath)
       const identity = readProfileIdentity(profilePath)
+      const builtInMetadata = getBuiltInProfileMetadata(name)
       const identityPath = getProfileIdentityPath(profilePath)
       const skillCount = countFilesRecursive(
         skillsDir,
@@ -507,13 +520,15 @@ export function listProfiles(): Array<ProfileSummary> {
       }
       results.push({
         name,
-        ...identity,
+        displayName: identity.displayName || builtInMetadata.displayName,
+        avatarDataUrl: identity.avatarDataUrl,
+        avatarImage: builtInMetadata.avatarImage,
         path: profilePath,
         active: name === activeProfile,
         exists: true,
         model: modelName,
         provider: providerName,
-        description: extractDescription(config) || undefined,
+        description: extractDescription(config) || builtInMetadata.description || undefined,
         skillCount,
         sessionCount,
         hasEnv: fs.existsSync(envPath),
@@ -531,6 +546,7 @@ export function listProfiles(): Array<ProfileSummary> {
 
   const root = getClaudeRoot()
   const defaultIdentity = readProfileIdentity(root)
+  const defaultMetadata = getBuiltInProfileMetadata('default')
   const defaultIdentityPath = getProfileIdentityPath(root)
   const config = readYamlConfig(path.join(root, 'config.yaml'))
   // Resolve model/provider for default profile too
@@ -552,13 +568,15 @@ export function listProfiles(): Array<ProfileSummary> {
   }
   results.unshift({
     name: 'default',
-    ...defaultIdentity,
+    displayName: defaultIdentity.displayName || defaultMetadata.displayName,
+    avatarDataUrl: defaultIdentity.avatarDataUrl,
+    avatarImage: defaultMetadata.avatarImage,
     path: root,
     active: activeProfile === 'default',
     exists: true,
     model: defaultModel,
     provider: defaultProvider,
-    description: extractDescription(config) || undefined,
+    description: extractDescription(config) || defaultMetadata.description || undefined,
     skillCount: countFilesRecursive(
       path.join(root, 'skills'),
       (full) => path.basename(full) === 'SKILL.md',
@@ -592,13 +610,17 @@ export function readProfile(name: string): ProfileDetail {
   const sessionsDir = path.join(profilePath, 'sessions')
   const skillsDir = path.join(profilePath, 'skills')
   const config = readYamlConfig(configPath)
+  const identity = readProfileIdentity(profilePath)
+  const builtInMetadata = getBuiltInProfileMetadata(normalized)
   return {
     name: normalized,
-    ...readProfileIdentity(profilePath),
+    displayName: identity.displayName || builtInMetadata.displayName,
+    avatarDataUrl: identity.avatarDataUrl,
+    avatarImage: builtInMetadata.avatarImage,
     path: profilePath,
     active: normalized === active,
     config,
-    description: extractDescription(config),
+    description: extractDescription(config) || builtInMetadata.description || '',
     envPath: fs.existsSync(envPath) ? envPath : undefined,
     hasEnv: fs.existsSync(envPath),
     sessionsDir: fs.existsSync(sessionsDir) ? sessionsDir : undefined,

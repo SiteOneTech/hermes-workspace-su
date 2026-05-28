@@ -95,6 +95,30 @@ describe('listProfiles', () => {
     expect(readProfile('builder').description).toBe('Updated description')
 
     updateProfileConfig('builder', { description: null })
-    expect(readProfile('builder').description).toBe('')
+    expect(readProfile('builder').description).toBe(
+      'Scoped implementation worker for focused product/code slices, integration fixes, tests, and small diffs with concrete verification evidence.',
+    )
+  })
+
+  it('hydrates built-in profile metadata when config and identity do not define it', () => {
+    const hermesRoot = path.join(tempHome, '.hermes')
+    const profileRoot = path.join(hermesRoot, 'profiles', 'codex-builder')
+
+    fs.mkdirSync(profileRoot, { recursive: true })
+    fs.writeFileSync(
+      path.join(profileRoot, 'config.yaml'),
+      'model:\n  default: deepseek-chat\n  provider: deepseek\n',
+      'utf-8',
+    )
+
+    const summary = listProfiles().find((profile) => profile.name === 'codex-builder')
+    const detail = readProfile('codex-builder')
+
+    expect(summary?.displayName).toBe('Codex Builder')
+    expect(summary?.avatarImage).toBe('/agent-avatars/builder.webp')
+    expect(summary?.description).toContain('DeepSeek')
+    expect(detail.displayName).toBe('Codex Builder')
+    expect(detail.avatarImage).toBe('/agent-avatars/builder.webp')
+    expect(detail.description).toContain('DeepSeek')
   })
 })
