@@ -11,60 +11,6 @@ const PROFILE_METADATA: Record<string, BuiltInProfileMetadata> = {
       'Primary SitioUno operator profile: CEO/orchestrator interface with GPT-5.5, full workspace control, memory, tools, and gateway access.',
     avatarImage: '/claude-avatar.webp',
   },
-  builder: {
-    displayName: 'Builder',
-    description:
-      'Scoped implementation worker for focused product/code slices, integration fixes, tests, and small diffs with concrete verification evidence.',
-    avatarImage: '/agent-avatars/builder.webp',
-  },
-  reviewer: {
-    displayName: 'Reviewer',
-    description:
-      'Independent review and merge gate for security, logic, regressions, quality standards, and tested delivery evidence.',
-    avatarImage: '/agent-avatars/reviewer.webp',
-  },
-  qa: {
-    displayName: 'QA',
-    description:
-      'Quality-assurance worker for browser/API checks, smoke tests, acceptance criteria, and reproducible verification evidence.',
-    avatarImage: '/agent-avatars/qa.webp',
-  },
-  researcher: {
-    displayName: 'Researcher',
-    description:
-      'Research worker for market scans, technical discovery, source-backed synthesis, and decision support.',
-    avatarImage: '/agent-avatars/researcher.webp',
-  },
-  'ops-watch': {
-    displayName: 'Ops Watch',
-    description:
-      'Operations monitor for deployments, runtime health, logs, incidents, and infrastructure readiness checks.',
-    avatarImage: '/agent-avatars/ops-watch.webp',
-  },
-  maintainer: {
-    displayName: 'Maintainer',
-    description:
-      'Repository hygiene worker for dependency upkeep, small maintenance diffs, documentation drift, and technical-debt cleanup.',
-    avatarImage: '/agent-avatars/maintainer.webp',
-  },
-  strategist: {
-    displayName: 'Strategist',
-    description:
-      'Strategy worker for product positioning, business framing, roadmap options, and executive-level tradeoff analysis.',
-    avatarImage: '/agent-avatars/strategist.webp',
-  },
-  'inbox-triage': {
-    displayName: 'Inbox Triage',
-    description:
-      'Intake and triage worker for classifying incoming requests, extracting action items, and routing work to the right owner.',
-    avatarImage: '/agent-avatars/inbox-triage.webp',
-  },
-  'km-agent': {
-    displayName: 'KM Agent',
-    description:
-      'Knowledge steward for RAZSOC/GBrain/Obsidian hygiene: keeps durable context coherent, searchable, and source-of-record aligned.',
-    avatarImage: '/agent-avatars/km-agent.webp',
-  },
   'factory-orchestrator': {
     displayName: 'Factory Orchestrator',
     description:

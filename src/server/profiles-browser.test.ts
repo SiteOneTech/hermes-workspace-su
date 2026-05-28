@@ -95,9 +95,7 @@ describe('listProfiles', () => {
     expect(readProfile('builder').description).toBe('Updated description')
 
     updateProfileConfig('builder', { description: null })
-    expect(readProfile('builder').description).toBe(
-      'Scoped implementation worker for focused product/code slices, integration fixes, tests, and small diffs with concrete verification evidence.',
-    )
+    expect(readProfile('builder').description).toBe('')
   })
 
   it('hydrates built-in profile metadata when config and identity do not define it', () => {
