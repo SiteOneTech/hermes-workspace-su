@@ -1,92 +1,125 @@
-[
-  {
-    "id": "orchestrator",
-    "path": "/agent-avatars/orchestrator.webp",
-    "provider": "higgsfield",
-    "model": "gpt_image_2",
-    "bytes": 47822,
-    "status": "generated",
-    "sourcePngBytes": 7796931
-  },
-  {
-    "id": "km-agent",
-    "path": "/agent-avatars/km-agent.webp",
-    "provider": "higgsfield",
-    "model": "gpt_image_2",
-    "bytes": 52794,
-    "status": "generated",
-    "sourcePngBytes": 8954456
-  },
-  {
-    "id": "builder",
-    "path": "/agent-avatars/builder.webp",
-    "provider": "higgsfield",
-    "model": "gpt_image_2",
-    "bytes": 56714,
-    "status": "generated",
-    "sourcePngBytes": 9297778
-  },
-  {
-    "id": "reviewer",
-    "path": "/agent-avatars/reviewer.webp",
-    "provider": "higgsfield",
-    "model": "gpt_image_2",
-    "bytes": 36480,
-    "status": "generated",
-    "sourcePngBytes": 7889347
-  },
-  {
-    "id": "qa",
-    "path": "/agent-avatars/qa.webp",
-    "provider": "higgsfield",
-    "model": "gpt_image_2",
-    "bytes": 39942,
-    "status": "generated",
-    "sourcePngBytes": 7982772
-  },
-  {
-    "id": "researcher",
-    "path": "/agent-avatars/researcher.webp",
-    "provider": "higgsfield",
-    "model": "gpt_image_2",
-    "bytes": 42286,
-    "status": "generated",
-    "sourcePngBytes": 8530931
-  },
-  {
-    "id": "ops-watch",
-    "path": "/agent-avatars/ops-watch.webp",
-    "provider": "higgsfield",
-    "model": "gpt_image_2",
-    "bytes": 34740,
-    "status": "generated",
-    "sourcePngBytes": 7110517
-  },
-  {
-    "id": "maintainer",
-    "path": "/agent-avatars/maintainer.webp",
-    "provider": "higgsfield",
-    "model": "gpt_image_2",
-    "bytes": 34838,
-    "status": "generated",
-    "sourcePngBytes": 7976242
-  },
-  {
-    "id": "strategist",
-    "path": "/agent-avatars/strategist.webp",
-    "provider": "openai-fallback",
-    "model": "gpt-image-2-medium",
-    "bytes": 41222,
-    "status": "generated",
-    "sourcePngBytes": 1551739
-  },
-  {
-    "id": "inbox-triage",
-    "path": "/agent-avatars/inbox-triage.webp",
-    "provider": "openai-fallback",
-    "model": "gpt-image-2-medium",
-    "bytes": 33476,
-    "status": "generated",
-    "sourcePngBytes": 1367651
-  }
-]
+{
+  "avatars": [
+    {
+      "bytes": 36008,
+      "id": "claude-builder",
+      "model": "pil-role-avatar-v1",
+      "path": "/agent-avatars/claude-builder.webp",
+      "provider": "local-canonical-fallback",
+      "source": "Higgsfield CLI approval gate blocked; deterministic role avatar generated locally",
+      "status": "generated"
+    },
+    {
+      "bytes": 35746,
+      "id": "codex-builder",
+      "model": "pil-role-avatar-v1",
+      "path": "/agent-avatars/codex-builder.webp",
+      "provider": "local-canonical-fallback",
+      "source": "Higgsfield CLI approval gate blocked; deterministic role avatar generated locally",
+      "status": "generated"
+    },
+    {
+      "bytes": 35990,
+      "id": "devops-release",
+      "model": "pil-role-avatar-v1",
+      "path": "/agent-avatars/devops-release.webp",
+      "provider": "local-canonical-fallback",
+      "source": "Higgsfield CLI approval gate blocked; deterministic role avatar generated locally",
+      "status": "generated"
+    },
+    {
+      "bytes": 34498,
+      "id": "factory-orchestrator",
+      "model": "pil-role-avatar-v1",
+      "path": "/agent-avatars/factory-orchestrator.webp",
+      "provider": "local-canonical-fallback",
+      "source": "Higgsfield CLI approval gate blocked; deterministic role avatar generated locally",
+      "status": "generated"
+    },
+    {
+      "bytes": 18068,
+      "id": "factory-reporter",
+      "model": "seedream_v5_lite",
+      "path": "/agent-avatars/factory-reporter.webp",
+      "provider": "higgsfield",
+      "quality": "basic",
+      "sourceUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_397i0S0E0Y4e0DX3okB02DP9sWz/hf_20260528_163337_52f91fa2-6442-49ed-980d-8bf200b66456.png",
+      "status": "generated"
+    },
+    {
+      "bytes": 12650,
+      "id": "implementation-planner",
+      "model": "seedream_v5_lite",
+      "path": "/agent-avatars/implementation-planner.webp",
+      "provider": "higgsfield",
+      "quality": "basic",
+      "sourceUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_397i0S0E0Y4e0DX3okB02DP9sWz/hf_20260528_163241_c3936e54-f8a1-4a0c-a180-e192b5fb8300.png",
+      "status": "generated"
+    },
+    {
+      "bytes": 20366,
+      "id": "openhands-lab",
+      "model": "seedream_v5_lite",
+      "path": "/agent-avatars/openhands-lab.webp",
+      "provider": "higgsfield",
+      "quality": "basic",
+      "sourceUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_397i0S0E0Y4e0DX3okB02DP9sWz/hf_20260528_163431_51b1b78d-2b51-43ec-977c-9fcf75dc5378.png",
+      "status": "generated"
+    },
+    {
+      "bytes": 34322,
+      "id": "product-analyst",
+      "model": "pil-role-avatar-v1",
+      "path": "/agent-avatars/product-analyst.webp",
+      "provider": "local-canonical-fallback",
+      "source": "Higgsfield CLI approval gate blocked; deterministic role avatar generated locally",
+      "status": "generated"
+    },
+    {
+      "bytes": 30166,
+      "id": "qa-verifier",
+      "model": "pil-role-avatar-v1",
+      "path": "/agent-avatars/qa-verifier.webp",
+      "provider": "local-canonical-fallback",
+      "source": "Higgsfield CLI approval gate blocked; deterministic role avatar generated locally",
+      "status": "generated"
+    },
+    {
+      "bytes": 34396,
+      "id": "quality-reviewer",
+      "model": "pil-role-avatar-v1",
+      "path": "/agent-avatars/quality-reviewer.webp",
+      "provider": "local-canonical-fallback",
+      "source": "Higgsfield CLI approval gate blocked; deterministic role avatar generated locally",
+      "status": "generated"
+    },
+    {
+      "bytes": 35152,
+      "id": "security-reviewer",
+      "model": "pil-role-avatar-v1",
+      "path": "/agent-avatars/security-reviewer.webp",
+      "provider": "local-canonical-fallback",
+      "source": "Higgsfield CLI approval gate blocked; deterministic role avatar generated locally",
+      "status": "generated"
+    },
+    {
+      "bytes": 20286,
+      "id": "solution-architect",
+      "model": "seedream_v5_lite",
+      "path": "/agent-avatars/solution-architect.webp",
+      "provider": "higgsfield",
+      "quality": "basic",
+      "sourceUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_397i0S0E0Y4e0DX3okB02DP9sWz/hf_20260528_163201_1a7a8363-c248-4ed7-896d-02a9e3fc4778.png",
+      "status": "generated"
+    },
+    {
+      "bytes": 25358,
+      "id": "zeus",
+      "model": "pil-role-avatar-v1",
+      "path": "/agent-avatars/zeus.webp",
+      "provider": "local-canonical-fallback",
+      "source": "Higgsfield CLI approval gate blocked; deterministic role avatar generated locally",
+      "status": "generated"
+    }
+  ]
+}

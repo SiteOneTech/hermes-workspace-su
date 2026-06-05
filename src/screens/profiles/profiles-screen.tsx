@@ -284,6 +284,15 @@ export function ProfilesScreen() {
     return profile.displayName?.trim() || profile.name
   }
 
+  function profileAvatarSrc(
+    profile: Pick<
+      ProfileSummary | ProfileDetail,
+      'avatarDataUrl' | 'avatarImage'
+    >,
+  ): string {
+    return profile.avatarDataUrl || profile.avatarImage || '/claude-avatar.webp'
+  }
+
   function openIdentityDialog(profile: ProfileSummary) {
     setIdentityTarget(profile)
     setIdentityDisplayName(profile.displayName?.trim() || '')
@@ -404,7 +413,9 @@ export function ProfilesScreen() {
       toast(`Saved description for ${detailsName}`, { type: 'success' })
       await Promise.all([
         refreshProfiles(),
-        queryClient.invalidateQueries({ queryKey: ['profiles', 'read', detailsName] }),
+        queryClient.invalidateQueries({
+          queryKey: ['profiles', 'read', detailsName],
+        }),
       ])
       await detailQuery.refetch()
     } catch (error) {
@@ -461,7 +472,7 @@ export function ProfilesScreen() {
                     )}
                   >
                     <img
-                      src={profile.avatarDataUrl || profile.avatarImage || '/claude-avatar.webp'}
+                      src={profileAvatarSrc(profile)}
                       alt={profileDisplayLabel(profile)}
                       className={cn(
                         'size-20 rounded-full border-2 object-cover',
@@ -530,13 +541,13 @@ export function ProfilesScreen() {
               </div>
 
               {/* Actions */}
-              <div className="mt-4 flex border-t border-primary-200 dark:border-neutral-800">
+              <div className="mt-4 grid grid-cols-2 border-t border-primary-200 text-xs font-semibold dark:border-neutral-800 sm:grid-cols-5">
                 <button
                   type="button"
                   onClick={() => void handleActivate(profile.name)}
                   disabled={profile.active || busy}
                   className={cn(
-                    'flex flex-1 items-center justify-center gap-1.5 border-r border-primary-200 py-2.5 text-xs font-semibold transition-colors dark:border-neutral-800',
+                    'flex items-center justify-center gap-1.5 border-r border-b border-primary-200 py-2.5 transition-colors dark:border-neutral-800 sm:border-b-0',
                     profile.active
                       ? 'cursor-default text-primary-300 dark:text-neutral-600'
                       : 'text-primary-700 hover:bg-primary-100 dark:text-neutral-300 dark:hover:bg-neutral-900',
@@ -552,7 +563,7 @@ export function ProfilesScreen() {
                 <button
                   type="button"
                   onClick={() => setDetailsName(profile.name)}
-                  className="flex flex-1 items-center justify-center gap-1.5 border-r border-primary-200 py-2.5 text-xs font-semibold text-primary-700 transition-colors hover:bg-primary-100 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900"
+                  className="flex items-center justify-center gap-1.5 border-b border-primary-200 py-2.5 text-primary-700 transition-colors hover:bg-primary-100 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900 sm:border-r sm:border-b-0"
                 >
                   <HugeiconsIcon
                     icon={Folder01Icon}
@@ -563,29 +574,43 @@ export function ProfilesScreen() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => openIdentityDialog(profile)}
+                  className="flex items-center justify-center gap-1.5 border-r border-b border-primary-200 py-2.5 text-primary-700 transition-colors hover:bg-primary-100 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900 sm:border-b-0"
+                >
+                  <HugeiconsIcon
+                    icon={UserGroupIcon}
+                    size={13}
+                    strokeWidth={1.8}
+                  />{' '}
+                  Avatar
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
-                    if (profile.name === 'default') {
-                      openIdentityDialog(profile)
-                    } else {
-                      setRenameTarget(profile)
-                      setRenameValue(profile.name)
-                    }
+                    setRenameTarget(profile)
+                    setRenameValue(profile.name)
                   }}
-                  className="flex flex-1 items-center justify-center gap-1.5 border-r border-primary-200 py-2.5 text-xs font-semibold text-primary-700 transition-colors hover:bg-primary-100 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900"
+                  disabled={profile.name === 'default' || busy}
+                  className={cn(
+                    'flex items-center justify-center gap-1.5 border-b border-primary-200 py-2.5 transition-colors dark:border-neutral-800 sm:border-r sm:border-b-0',
+                    profile.name === 'default'
+                      ? 'cursor-default text-primary-300 dark:text-neutral-600'
+                      : 'text-primary-700 hover:bg-primary-100 dark:text-neutral-300 dark:hover:bg-neutral-900',
+                  )}
                 >
                   <HugeiconsIcon
                     icon={Edit02Icon}
                     size={13}
                     strokeWidth={1.8}
                   />{' '}
-                  {profile.name === 'default' ? 'Identity' : 'Rename'}
+                  Rename
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleDelete(profile.name)}
                   disabled={profile.active || busy}
                   className={cn(
-                    'flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors',
+                    'col-span-2 flex items-center justify-center gap-1.5 py-2.5 transition-colors sm:col-span-1',
                     profile.active
                       ? 'cursor-default text-primary-300 dark:text-neutral-600'
                       : 'text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20',
@@ -989,7 +1014,14 @@ export function ProfilesScreen() {
           <div className="border-b border-primary-200 px-6 pb-4 pt-5 dark:border-neutral-800">
             <div className="flex items-center gap-3">
               <img
-                src={identityAvatarDataUrl || '/claude-avatar.webp'}
+                src={
+                  identityTarget
+                    ? profileAvatarSrc({
+                        avatarDataUrl: identityAvatarDataUrl,
+                        avatarImage: identityTarget.avatarImage,
+                      })
+                    : '/claude-avatar.webp'
+                }
                 alt={identityDisplayName || identityTarget?.name || 'Profile'}
                 className="size-12 rounded-full border-2 border-primary-200 object-cover dark:border-neutral-700"
               />
@@ -1032,7 +1064,14 @@ export function ProfilesScreen() {
               </label>
               <div className="flex items-center gap-3">
                 <img
-                  src={identityAvatarDataUrl || '/claude-avatar.webp'}
+                  src={
+                    identityTarget
+                      ? profileAvatarSrc({
+                          avatarDataUrl: identityAvatarDataUrl,
+                          avatarImage: identityTarget.avatarImage,
+                        })
+                      : '/claude-avatar.webp'
+                  }
                   alt={identityDisplayName || identityTarget?.name || 'Profile'}
                   className="size-16 rounded-full border-2 border-primary-200 object-cover dark:border-neutral-700"
                 />
@@ -1052,13 +1091,14 @@ export function ProfilesScreen() {
                     disabled={!identityAvatarDataUrl || identityProcessing}
                     className="h-8 w-fit rounded-lg border-primary-200 px-3"
                   >
-                    Remove avatar
+                    Remove custom avatar
                   </Button>
                 </div>
               </div>
               <p className="text-xs text-primary-400 dark:text-neutral-500">
                 Images are resized to 128px and stored in UI metadata, not in
-                Hermes runtime config.
+                Hermes runtime config. Removing a custom image restores the
+                profile's canonical built-in avatar.
               </p>
             </div>
 
@@ -1107,9 +1147,9 @@ export function ProfilesScreen() {
               <div className="flex min-w-0 items-center gap-3">
                 <img
                   src={
-                    detailQuery.data?.profile.avatarDataUrl ||
-                    detailQuery.data?.profile.avatarImage ||
-                    '/claude-avatar.webp'
+                    detailQuery.data?.profile
+                      ? profileAvatarSrc(detailQuery.data.profile)
+                      : '/claude-avatar.webp'
                   }
                   alt={
                     detailQuery.data?.profile
@@ -1138,7 +1178,7 @@ export function ProfilesScreen() {
                 {detailQuery.isFetching ? 'Refreshing…' : 'Refresh'}
               </Button>
             </div>
-        </div>
+          </div>
 
           {/* Body — scrollable */}
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
@@ -1199,12 +1239,15 @@ export function ProfilesScreen() {
                   </div>
                   <textarea
                     value={descriptionDraft}
-                    onChange={(event) => setDescriptionDraft(event.target.value)}
+                    onChange={(event) =>
+                      setDescriptionDraft(event.target.value)
+                    }
                     placeholder="What this profile is for, how it should behave, or what makes it different"
                     className="min-h-[96px] w-full rounded-lg border border-primary-200 bg-primary-100/70 p-3 text-sm text-primary-900 outline-none transition-colors focus:border-accent-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
                   />
                   <p className="mt-2 text-xs text-primary-400 dark:text-neutral-500">
-                    Saved into the profile config, so manual file edits show up here after refresh.
+                    Saved into the profile config, so manual file edits show up
+                    here after refresh.
                   </p>
                 </div>
                 <div className="rounded-xl border border-primary-200 bg-primary-50/80 p-4 dark:border-neutral-800 dark:bg-neutral-900/60">

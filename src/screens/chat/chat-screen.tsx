@@ -108,6 +108,8 @@ import { useTapDebug } from '@/hooks/use-tap-debug'
 import { useChatMode } from '@/hooks/use-chat-mode'
 import { useChatActivityStore, type AgentActivity } from '@/stores/chat-activity-store'
 
+const SEND_STREAM_UI_FAILSAFE_MS = 600_000
+
 type ChatScreenProps = {
   activeFriendlyId: string
   isNewChat?: boolean
@@ -1893,14 +1895,16 @@ export function ChatScreen({
         clientId: optimisticClientId,
       }
 
-      // Failsafe: clear waitingForResponse after 120s no matter what
-      // Prevents infinite spinner if SSE/idle detection both fail
+      // Failsafe: align with the server-side 10-minute send-stream timeout.
+      // The previous 120s client timer cleared the UI while long Hermes tool runs
+      // were still active, making responses look cut/deferred even though the
+      // backend continued processing.
       if (failsafeTimerRef.current) {
         window.clearTimeout(failsafeTimerRef.current)
       }
       failsafeTimerRef.current = window.setTimeout(() => {
         streamFinish()
-      }, 120_000)
+      }, SEND_STREAM_UI_FAILSAFE_MS)
 
       // Send a compatibility shape for attachment parsing.
       // Different server/channel versions read different keys.
