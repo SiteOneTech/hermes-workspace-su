@@ -50,6 +50,8 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { UserAvatar } from '@/components/avatars'
 import { SEARCH_MODAL_EVENTS, useSearchModal } from '@/hooks/use-search-modal'
 import {
+  selectChatProfileAvatarDataUrl,
+  selectChatProfileDisplayName,
   selectSidebarHoverExpand,
   useChatSettingsStore,
 } from '@/hooks/use-chat-settings'
@@ -61,7 +63,6 @@ import {
   MenuTrigger,
 } from '@/components/ui/menu'
 import { applyTheme, useSettingsStore } from '@/hooks/use-settings'
-import { useWorkspaceIdentity } from '@/hooks/use-workspace-identity'
 
 type WorkspaceStats = Record<string, unknown>
 
@@ -224,8 +225,7 @@ function NavItem({
               style={
                 item.badge === 'NEW'
                   ? {
-                      background:
-                        'linear-gradient(180deg, #fde68a 0%, #fbbf24 50%, #d4a017 100%)',
+                      background: 'linear-gradient(180deg, #fde68a 0%, #fbbf24 50%, #d4a017 100%)',
                       color: '#0b1320',
                       boxShadow: '0 0 8px rgba(250,204,21,0.4)',
                       letterSpacing: '0.08em',
@@ -254,7 +254,7 @@ function NavItem({
               render={
                 <Link
                   to={item.to}
-                  search={item.search as never}
+                  search={item.search}
                   hash={item.hash}
                   onClick={handleSelect}
                   className={cls}
@@ -272,7 +272,7 @@ function NavItem({
     return (
       <Link
         to={item.to}
-        search={item.search as never}
+        search={item.search}
         hash={item.hash}
         onClick={handleSelect}
         className={cls}
@@ -530,9 +530,10 @@ function ChatSidebarComponent({
 }: ChatSidebarProps) {
   const { settingsOpen, settingsSection, setSettingsOpen, handleOpenSettings } =
     useSidebarSettings()
-  const workspaceIdentity = useWorkspaceIdentity()
-  const profileDisplayName = workspaceIdentity.profileDisplayName
-  const profileAvatarDataUrl = workspaceIdentity.avatarSrc
+  const profileDisplayName = useChatSettingsStore(selectChatProfileDisplayName)
+  const profileAvatarDataUrl = useChatSettingsStore(
+    selectChatProfileAvatarDataUrl,
+  )
   const { deleteSession } = useDeleteSession()
   const { renameSession } = useRenameSession()
   const openSearchModal = useSearchModal((state) => state.openModal)
@@ -546,9 +547,7 @@ function ChatSidebarComponent({
   useEffect(() => {
     function handleOpenSettingsEvent(event: Event) {
       const detail = (event as CustomEvent<ChatOpenSettingsDetail>).detail
-      handleOpenSettings(
-        detail.section === 'appearance' ? 'appearance' : 'claude',
-      )
+      handleOpenSettings(detail.section === 'appearance' ? 'appearance' : 'claude')
     }
 
     window.addEventListener(CHAT_OPEN_SETTINGS_EVENT, handleOpenSettingsEvent)
@@ -585,10 +584,12 @@ function ChatSidebarComponent({
   const isJobsActive = pathname === '/jobs'
   const isMemoryActive = pathname === '/memory'
   const isTasksActive = pathname === '/tasks'
-  const isWorkflowsActive = pathname === '/workflows'
   const isConductorActive = pathname === '/conductor'
   const isOperationsActive = pathname === '/operations'
   const isSwarmActive = pathname === '/swarm' || pathname === '/swarm2'
+  const echoStudioEnabled = useSettingsStore(
+    (state) => state.settings.experimentalEchoStudio,
+  )
   const mainRoutes = ['/chat', '/new', '/files', '/terminal']
   const knowledgeRoutes = ['/memory', '/skills']
   const systemRoutes = ['/settings', '/logs']
@@ -828,13 +829,6 @@ function ChatSidebarComponent({
     },
     {
       kind: 'link',
-      to: '/workflows',
-      icon: Building01Icon,
-      label: 'Workflows',
-      active: isWorkflowsActive,
-    },
-    {
-      kind: 'link',
       to: '/conductor',
       icon: Rocket01Icon,
       label: 'Conductor',
@@ -851,9 +845,21 @@ function ChatSidebarComponent({
       kind: 'link',
       to: '/swarm',
       icon: UserGroupIcon,
-      label: 'Local Swarm',
+      label: 'Swarm',
       active: isSwarmActive,
     },
+    ...(echoStudioEnabled
+      ? [
+          {
+            kind: 'link' as const,
+            to: '/echo-studio',
+            icon: DashboardSquare01Icon,
+            label: 'Echo Studio',
+            active: pathname.startsWith('/echo-studio'),
+          },
+        ]
+      : []),
+
   ]
 
   const knowledgeItems: Array<NavItemDef> = [
@@ -945,15 +951,15 @@ function ChatSidebarComponent({
                 )}
               >
                 <img
-                  src={workspaceIdentity.avatarSrc}
-                  alt={workspaceIdentity.profileDisplayName}
+                  src="/claude-avatar.webp"
+                  alt="Hermes Agent"
                   className="size-6 rounded-lg"
                 />
                 <span
                   className="text-sm font-semibold tracking-tight"
                   style={{ color: 'var(--theme-text)' }}
                 >
-                  {workspaceIdentity.workspaceName}
+                  Hermes Workspace
                 </span>
               </Link>
             </motion.div>
@@ -1044,41 +1050,41 @@ function ChatSidebarComponent({
       {/* Hide when VITE_HERMESWORLD_ENABLED is explicitly '0' */}
       {!isVisuallyCollapsed &&
         (import.meta as any).env?.VITE_HERMESWORLD_ENABLED !== '0' && (
-          <div className="px-2 pb-2">
-            <Link
-              to="/playground"
-              onClick={() => onSelectSession?.()}
-              className={cn(
-                buttonVariants({ variant: 'ghost', size: 'sm' }),
-                'group w-full justify-start gap-2.5 px-3 py-2 text-primary-900 hover:bg-primary-200 dark:hover:bg-primary-800',
-                isPlaygroundActive &&
-                  'bg-accent-500/10 text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/300/15',
-              )}
-              data-tour="hermesworld"
+        <div className="px-2 pb-2">
+          <Link
+            to="/playground"
+            onClick={() => onSelectSession?.()}
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'group w-full justify-start gap-2.5 px-3 py-2 text-primary-900 hover:bg-primary-200 dark:hover:bg-primary-800',
+              isPlaygroundActive &&
+                'bg-accent-500/10 text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/300/15',
+            )}
+            data-tour="hermesworld"
+          >
+            <HugeiconsIcon
+              icon={Castle02Icon}
+              size={20}
+              strokeWidth={1.5}
+              className="size-5 shrink-0"
+              style={{ color: '#facc15' }}
+            />
+            <span>HermesWorld</span>
+            <span
+              className="ml-auto inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold leading-none"
+              style={{
+                background:
+                  'linear-gradient(180deg, #fde68a 0%, #fbbf24 50%, #d4a017 100%)',
+                color: '#0b1320',
+                boxShadow: '0 0 8px rgba(250,204,21,0.4)',
+                letterSpacing: '0.08em',
+              }}
             >
-              <HugeiconsIcon
-                icon={Castle02Icon}
-                size={20}
-                strokeWidth={1.5}
-                className="size-5 shrink-0"
-                style={{ color: '#facc15' }}
-              />
-              <span>HermesWorld</span>
-              <span
-                className="ml-auto inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold leading-none"
-                style={{
-                  background:
-                    'linear-gradient(180deg, #fde68a 0%, #fbbf24 50%, #d4a017 100%)',
-                  color: '#0b1320',
-                  boxShadow: '0 0 8px rgba(250,204,21,0.4)',
-                  letterSpacing: '0.08em',
-                }}
-              >
-                NEW
-              </span>
-            </Link>
-          </div>
-        )}
+              NEW
+            </span>
+          </Link>
+        </div>
+      )}
 
       {/* ── Scrollable body: nav + sessions ─────────────────────────── */}
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin flex flex-col">

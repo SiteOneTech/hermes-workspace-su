@@ -18,6 +18,7 @@ export type ProfileSummary = ProfileIdentity & {
   model?: string
   provider?: string
   description?: string
+  systemPrompt?: string
   skillCount: number
   sessionCount: number
   hasEnv: boolean
@@ -30,6 +31,7 @@ export type ProfileDetail = ProfileIdentity & {
   active: boolean
   config: Record<string, unknown>
   description: string
+  systemPrompt: string
   envPath?: string
   hasEnv: boolean
   sessionsDir?: string
@@ -269,6 +271,25 @@ function extractDescription(config: Record<string, unknown>): string {
   return ''
 }
 
+function extractSystemPrompt(
+  config: Record<string, unknown>,
+  profilePath: string,
+): string {
+  const configured = config.system_prompt
+  if (typeof configured === 'string' && configured.trim()) {
+    return configured.trim()
+  }
+
+  const soulPath = path.join(profilePath, 'SOUL.md')
+  if (!fs.existsSync(soulPath)) return ''
+
+  try {
+    return safeReadText(soulPath).trim()
+  } catch {
+    return ''
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Dashboard API fallback for split-host deployments
 // ---------------------------------------------------------------------------
@@ -438,6 +459,7 @@ export async function readProfileWithFallback(
               ...(match.provider ? { provider: match.provider } : {}),
             },
             description: match.description || builtInMetadata.description || '',
+            systemPrompt: '',
             hasEnv: false,
           }
         }
@@ -529,6 +551,7 @@ export function listProfiles(): Array<ProfileSummary> {
         model: modelName,
         provider: providerName,
         description: extractDescription(config) || builtInMetadata.description || undefined,
+        systemPrompt: extractSystemPrompt(config, profilePath) || undefined,
         skillCount,
         sessionCount,
         hasEnv: fs.existsSync(envPath),
@@ -577,6 +600,7 @@ export function listProfiles(): Array<ProfileSummary> {
     model: defaultModel,
     provider: defaultProvider,
     description: extractDescription(config) || defaultMetadata.description || undefined,
+    systemPrompt: extractSystemPrompt(config, root) || undefined,
     skillCount: countFilesRecursive(
       path.join(root, 'skills'),
       (full) => path.basename(full) === 'SKILL.md',
@@ -621,6 +645,7 @@ export function readProfile(name: string): ProfileDetail {
     active: normalized === active,
     config,
     description: extractDescription(config) || builtInMetadata.description || '',
+    systemPrompt: extractSystemPrompt(config, profilePath),
     envPath: fs.existsSync(envPath) ? envPath : undefined,
     hasEnv: fs.existsSync(envPath),
     sessionsDir: fs.existsSync(sessionsDir) ? sessionsDir : undefined,

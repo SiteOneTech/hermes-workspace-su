@@ -29,7 +29,13 @@ import { useChatSessions } from '@/screens/chat/hooks/use-chat-sessions'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { SIDEBAR_TOGGLE_EVENT } from '@/hooks/use-global-shortcuts'
 import { useSwipeNavigation } from '@/hooks/use-swipe-navigation'
-import { ChatPanel } from '@/components/chat-panel'
+// Lazy: ChatPanel statically imports ChatScreen and with it the chat
+// markdown pipeline; keeping it out of the eager entry means non-chat
+// routes stop paying for chat at first paint. The chat route itself
+// already lazy-loads ChatScreen through its own boundary.
+const ChatPanel = lazy(() =>
+  import('@/components/chat-panel').then((m) => ({ default: m.ChatPanel })),
+)
 import { ChatPanelToggle } from '@/components/chat-panel-toggle'
 import { LoginScreen } from '@/components/auth/login-screen'
 import { MobileTabBar } from '@/components/mobile-tab-bar'
@@ -101,6 +107,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     if (path.startsWith('/jobs')) return 5
     if (path.startsWith('/workflows')) return 6
     if (path === '/swarm' || path.startsWith('/swarm2')) return 7
+    if (path.startsWith('/echo-studio')) return 7
     if (path.startsWith('/memory')) return 8
     if (path.startsWith('/skills')) return 9
     if (path.startsWith('/mcp')) return 10
@@ -177,6 +184,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     if (pathname.startsWith('/operations')) return 'Operations'
     if (pathname.startsWith('/swarm2') || pathname === '/swarm')
       return 'Local Swarm'
+    if (pathname.startsWith('/echo-studio')) return 'Echo Studio'
     if (pathname.startsWith('/memory')) return 'Memory'
     if (pathname.startsWith('/skills')) return 'Skills'
     if (pathname.startsWith('/mcp')) return 'MCP'
@@ -404,7 +412,13 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
               className="flex flex-col"
               style={{
                 position: 'absolute',
-                inset: 0,
+                top: 0,
+                left: 0,
+                right: 0,
+                // inset:0 would extend through main's tab-bar padding (abspos resolves
+                // against the padding box), putting the mobile input bar behind the
+                // fixed tab bar. --tabbar-h is live: 0px whenever the bar hides.
+                bottom: isMobile ? 'var(--tabbar-h, 80px)' : 0,
                 visibility: isOnTerminalRoute ? 'visible' : 'hidden',
                 pointerEvents: isOnTerminalRoute ? 'auto' : 'none',
                 zIndex: isOnTerminalRoute ? 1 : -1,
@@ -447,10 +461,11 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
           </main>
 
           {/* Chat panel — visible on non-chat routes (but not in HermesWorld, which has its own in-game chat) */}
-          {!isOnChatRoute &&
-            !isOnPlaygroundRoute &&
-            !isChromeFreeSurface &&
-            !isMobile && <ChatPanel />}
+          {!isOnChatRoute && !isOnPlaygroundRoute && !isChromeFreeSurface && !isMobile && (
+            <Suspense fallback={null}>
+              <ChatPanel />
+            </Suspense>
+          )}
         </div>
 
         {/* Floating chat toggle — visible on non-chat routes (but not in HermesWorld) */}
