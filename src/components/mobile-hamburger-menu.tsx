@@ -24,6 +24,7 @@ import { hapticTap } from '@/lib/haptics'
 import { getTheme, getThemeVariant, isDarkTheme, setTheme } from '@/lib/theme'
 import { UserAvatar } from '@/components/avatars'
 import { useWorkspaceIdentity } from '@/hooks/use-workspace-identity'
+import { useSettingsStore } from '@/hooks/use-settings'
 
 const HERMES_WORLD_ENABLED =
   (import.meta as any).env?.VITE_HERMESWORLD_ENABLED !== '0'
@@ -91,6 +92,13 @@ const MOBILE_HAMBURGER_NAV_ITEMS_BASE = [
     icon: UserGroupIcon,
     to: '/swarm',
     match: (p: string) => p === '/swarm' || p.startsWith('/swarm2'),
+  },
+  {
+    id: 'echo-studio',
+    label: 'Echo Studio',
+    icon: Rocket01Icon,
+    to: '/echo-studio',
+    match: (p: string) => p.startsWith('/echo-studio'),
   },
 
   {
@@ -172,6 +180,12 @@ export function MobileHamburgerMenu() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const workspaceIdentity = useWorkspaceIdentity()
   const profileDisplayName = workspaceIdentity.profileDisplayName
+  const echoStudioEnabled = useSettingsStore(
+    (state) => state.settings.experimentalEchoStudio,
+  )
+  const visibleNavItems = MOBILE_HAMBURGER_NAV_ITEMS.filter(
+    (item) => item.id !== 'echo-studio' || echoStudioEnabled,
+  )
   const isChatRoute =
     pathname.startsWith('/chat') || pathname === '/new' || pathname === '/'
 
@@ -259,7 +273,7 @@ export function MobileHamburgerMenu() {
 
         {/* Nav items */}
         <nav className="flex flex-col gap-1 px-3 pt-4 flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          {MOBILE_HAMBURGER_NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = item.match(pathname)
             return (
               <button

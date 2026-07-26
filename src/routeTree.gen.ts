@@ -27,6 +27,7 @@ import { Route as McpRouteImport } from './routes/mcp'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as HermesWorldRouteImport } from './routes/hermes-world'
 import { Route as FilesRouteImport } from './routes/files'
+import { Route as EchoStudioRouteImport } from './routes/echo-studio'
 import { Route as EarlyAccessRouteImport } from './routes/early-access'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConductorRouteImport } from './routes/conductor'
@@ -102,6 +103,7 @@ import { Route as ApiConnectionSettingsRouteImport } from './routes/api/connecti
 import { Route as ApiConfigPatchRouteImport } from './routes/api/config-patch'
 import { Route as ApiConductorStopRouteImport } from './routes/api/conductor-stop'
 import { Route as ApiConductorSpawnRouteImport } from './routes/api/conductor-spawn'
+import { Route as ApiCommandsRouteImport } from './routes/api/commands'
 import { Route as ApiClaudeUpdateRouteImport } from './routes/api/claude-update'
 import { Route as ApiClaudeTasksAssigneesRouteImport } from './routes/api/claude-tasks-assignees'
 import { Route as ApiClaudeTasksRouteImport } from './routes/api/claude-tasks'
@@ -111,6 +113,7 @@ import { Route as ApiChatEventsRouteImport } from './routes/api/chat-events'
 import { Route as ApiAuthCheckRouteImport } from './routes/api/auth-check'
 import { Route as ApiAuthRouteImport } from './routes/api/auth'
 import { Route as ApiArtifactsRouteImport } from './routes/api/artifacts'
+import { Route as ApiAgentBusRouteImport } from './routes/api/agent-bus'
 import { Route as ApiUpdateWorkspaceRouteImport } from './routes/api/update/workspace'
 import { Route as ApiUpdateStatusRouteImport } from './routes/api/update/status'
 import { Route as ApiUpdateDismissNotesRouteImport } from './routes/api/update/dismiss-notes'
@@ -122,8 +125,12 @@ import { Route as ApiSkillsToggleRouteImport } from './routes/api/skills/toggle'
 import { Route as ApiSkillsInstallRouteImport } from './routes/api/skills/install'
 import { Route as ApiSkillsHubSearchRouteImport } from './routes/api/skills/hub-search'
 import { Route as ApiSessionsSendRouteImport } from './routes/api/sessions/send'
+import { Route as ApiSessionsSearchRouteImport } from './routes/api/sessions/search'
+import { Route as ApiRunsActiveRouteImport } from './routes/api/runs/active'
 import { Route as ApiProfilesUpdateIdentityRouteImport } from './routes/api/profiles/update-identity'
 import { Route as ApiProfilesUpdateRouteImport } from './routes/api/profiles/update'
+import { Route as ApiProfilesToggleSkillRouteImport } from './routes/api/profiles/toggle-skill'
+import { Route as ApiProfilesSkillsRouteImport } from './routes/api/profiles/skills'
 import { Route as ApiProfilesRenameRouteImport } from './routes/api/profiles/rename'
 import { Route as ApiProfilesReadRouteImport } from './routes/api/profiles/read'
 import { Route as ApiProfilesListRouteImport } from './routes/api/profiles/list'
@@ -152,6 +159,9 @@ import { Route as ApiKnowledgeGraphRouteImport } from './routes/api/knowledge/gr
 import { Route as ApiKnowledgeConfigRouteImport } from './routes/api/knowledge/config'
 import { Route as ApiHermesworldReservationsRouteImport } from './routes/api/hermesworld/reservations'
 import { Route as ApiHermesTasksTaskIdRouteImport } from './routes/api/hermes-tasks.$taskId'
+import { Route as ApiExternalMemorySearchRouteImport } from './routes/api/external-memory/search'
+import { Route as ApiExternalMemoryProvidersRouteImport } from './routes/api/external-memory/providers'
+import { Route as ApiExternalMemoryCandidatesRouteImport } from './routes/api/external-memory/candidates'
 import { Route as ApiDashboardOverviewRouteImport } from './routes/api/dashboard/overview'
 import { Route as ApiClaudeTasksTaskIdRouteImport } from './routes/api/claude-tasks.$taskId'
 import { Route as ApiClaudeProxySplatRouteImport } from './routes/api/claude-proxy/$'
@@ -162,6 +172,7 @@ import { Route as ApiSessionsSessionKeyActiveRunRouteImport } from './routes/api
 import { Route as ApiMcpHubSourcesIdRouteImport } from './routes/api/mcp/hub-sources.$id'
 import { Route as ApiMcpNameLogsRouteImport } from './routes/api/mcp/$name.logs'
 import { Route as ApiHermesworldReservationsConfirmRouteImport } from './routes/api/hermesworld/reservations/confirm'
+import { Route as ApiRunsSessionKeyRunIdAbandonRouteImport } from './routes/api/runs/$sessionKey.$runId.abandon'
 
 const WorldRoute = WorldRouteImport.update({
   id: '/world',
@@ -251,6 +262,11 @@ const HermesWorldRoute = HermesWorldRouteImport.update({
 const FilesRoute = FilesRouteImport.update({
   id: '/files',
   path: '/files',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EchoStudioRoute = EchoStudioRouteImport.update({
+  id: '/echo-studio',
+  path: '/echo-studio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EarlyAccessRoute = EarlyAccessRouteImport.update({
@@ -629,6 +645,11 @@ const ApiConductorSpawnRoute = ApiConductorSpawnRouteImport.update({
   path: '/api/conductor-spawn',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCommandsRoute = ApiCommandsRouteImport.update({
+  id: '/api/commands',
+  path: '/api/commands',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiClaudeUpdateRoute = ApiClaudeUpdateRouteImport.update({
   id: '/api/claude-update',
   path: '/api/claude-update',
@@ -672,6 +693,11 @@ const ApiAuthRoute = ApiAuthRouteImport.update({
 const ApiArtifactsRoute = ApiArtifactsRouteImport.update({
   id: '/api/artifacts',
   path: '/api/artifacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAgentBusRoute = ApiAgentBusRouteImport.update({
+  id: '/api/agent-bus',
+  path: '/api/agent-bus',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUpdateWorkspaceRoute = ApiUpdateWorkspaceRouteImport.update({
@@ -729,6 +755,16 @@ const ApiSessionsSendRoute = ApiSessionsSendRouteImport.update({
   path: '/send',
   getParentRoute: () => ApiSessionsRoute,
 } as any)
+const ApiSessionsSearchRoute = ApiSessionsSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => ApiSessionsRoute,
+} as any)
+const ApiRunsActiveRoute = ApiRunsActiveRouteImport.update({
+  id: '/api/runs/active',
+  path: '/api/runs/active',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProfilesUpdateIdentityRoute =
   ApiProfilesUpdateIdentityRouteImport.update({
     id: '/api/profiles/update-identity',
@@ -738,6 +774,16 @@ const ApiProfilesUpdateIdentityRoute =
 const ApiProfilesUpdateRoute = ApiProfilesUpdateRouteImport.update({
   id: '/api/profiles/update',
   path: '/api/profiles/update',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProfilesToggleSkillRoute = ApiProfilesToggleSkillRouteImport.update({
+  id: '/api/profiles/toggle-skill',
+  path: '/api/profiles/toggle-skill',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProfilesSkillsRoute = ApiProfilesSkillsRouteImport.update({
+  id: '/api/profiles/skills',
+  path: '/api/profiles/skills',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiProfilesRenameRoute = ApiProfilesRenameRouteImport.update({
@@ -881,6 +927,23 @@ const ApiHermesTasksTaskIdRoute = ApiHermesTasksTaskIdRouteImport.update({
   path: '/$taskId',
   getParentRoute: () => ApiHermesTasksRoute,
 } as any)
+const ApiExternalMemorySearchRoute = ApiExternalMemorySearchRouteImport.update({
+  id: '/api/external-memory/search',
+  path: '/api/external-memory/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExternalMemoryProvidersRoute =
+  ApiExternalMemoryProvidersRouteImport.update({
+    id: '/api/external-memory/providers',
+    path: '/api/external-memory/providers',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiExternalMemoryCandidatesRoute =
+  ApiExternalMemoryCandidatesRouteImport.update({
+    id: '/api/external-memory/candidates',
+    path: '/api/external-memory/candidates',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiDashboardOverviewRoute = ApiDashboardOverviewRouteImport.update({
   id: '/api/dashboard/overview',
   path: '/api/dashboard/overview',
@@ -934,6 +997,12 @@ const ApiHermesworldReservationsConfirmRoute =
     path: '/confirm',
     getParentRoute: () => ApiHermesworldReservationsRoute,
   } as any)
+const ApiRunsSessionKeyRunIdAbandonRoute =
+  ApiRunsSessionKeyRunIdAbandonRouteImport.update({
+    id: '/api/runs/$sessionKey/$runId/abandon',
+    path: '/api/runs/$sessionKey/$runId/abandon',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -942,6 +1011,7 @@ export interface FileRoutesByFullPath {
   '/conductor': typeof ConductorRoute
   '/dashboard': typeof DashboardRoute
   '/early-access': typeof EarlyAccessRoute
+  '/echo-studio': typeof EchoStudioRoute
   '/files': typeof FilesRoute
   '/hermes-world': typeof HermesWorldRoute
   '/jobs': typeof JobsRoute
@@ -960,6 +1030,7 @@ export interface FileRoutesByFullPath {
   '/vt-capital': typeof VtCapitalRoute
   '/workflows': typeof WorkflowsRoute
   '/world': typeof WorldRoute
+  '/api/agent-bus': typeof ApiAgentBusRoute
   '/api/artifacts': typeof ApiArtifactsRouteWithChildren
   '/api/auth': typeof ApiAuthRoute
   '/api/auth-check': typeof ApiAuthCheckRoute
@@ -969,6 +1040,7 @@ export interface FileRoutesByFullPath {
   '/api/claude-tasks': typeof ApiClaudeTasksRouteWithChildren
   '/api/claude-tasks-assignees': typeof ApiClaudeTasksAssigneesRoute
   '/api/claude-update': typeof ApiClaudeUpdateRoute
+  '/api/commands': typeof ApiCommandsRoute
   '/api/conductor-spawn': typeof ApiConductorSpawnRoute
   '/api/conductor-stop': typeof ApiConductorStopRoute
   '/api/config-patch': typeof ApiConfigPatchRoute
@@ -1043,6 +1115,9 @@ export interface FileRoutesByFullPath {
   '/api/claude-proxy/$': typeof ApiClaudeProxySplatRoute
   '/api/claude-tasks/$taskId': typeof ApiClaudeTasksTaskIdRoute
   '/api/dashboard/overview': typeof ApiDashboardOverviewRoute
+  '/api/external-memory/candidates': typeof ApiExternalMemoryCandidatesRoute
+  '/api/external-memory/providers': typeof ApiExternalMemoryProvidersRoute
+  '/api/external-memory/search': typeof ApiExternalMemorySearchRoute
   '/api/hermes-tasks/$taskId': typeof ApiHermesTasksTaskIdRoute
   '/api/hermesworld/reservations': typeof ApiHermesworldReservationsRouteWithChildren
   '/api/knowledge/config': typeof ApiKnowledgeConfigRoute
@@ -1071,8 +1146,12 @@ export interface FileRoutesByFullPath {
   '/api/profiles/list': typeof ApiProfilesListRoute
   '/api/profiles/read': typeof ApiProfilesReadRoute
   '/api/profiles/rename': typeof ApiProfilesRenameRoute
+  '/api/profiles/skills': typeof ApiProfilesSkillsRoute
+  '/api/profiles/toggle-skill': typeof ApiProfilesToggleSkillRoute
   '/api/profiles/update': typeof ApiProfilesUpdateRoute
   '/api/profiles/update-identity': typeof ApiProfilesUpdateIdentityRoute
+  '/api/runs/active': typeof ApiRunsActiveRoute
+  '/api/sessions/search': typeof ApiSessionsSearchRoute
   '/api/sessions/send': typeof ApiSessionsSendRoute
   '/api/skills/hub-search': typeof ApiSkillsHubSearchRoute
   '/api/skills/install': typeof ApiSkillsInstallRoute
@@ -1089,6 +1168,7 @@ export interface FileRoutesByFullPath {
   '/api/mcp/hub-sources/$id': typeof ApiMcpHubSourcesIdRoute
   '/api/sessions/$sessionKey/active-run': typeof ApiSessionsSessionKeyActiveRunRoute
   '/api/sessions/$sessionKey/status': typeof ApiSessionsSessionKeyStatusRoute
+  '/api/runs/$sessionKey/$runId/abandon': typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1097,6 +1177,7 @@ export interface FileRoutesByTo {
   '/conductor': typeof ConductorRoute
   '/dashboard': typeof DashboardRoute
   '/early-access': typeof EarlyAccessRoute
+  '/echo-studio': typeof EchoStudioRoute
   '/files': typeof FilesRoute
   '/hermes-world': typeof HermesWorldRoute
   '/jobs': typeof JobsRoute
@@ -1114,6 +1195,7 @@ export interface FileRoutesByTo {
   '/vt-capital': typeof VtCapitalRoute
   '/workflows': typeof WorkflowsRoute
   '/world': typeof WorldRoute
+  '/api/agent-bus': typeof ApiAgentBusRoute
   '/api/artifacts': typeof ApiArtifactsRouteWithChildren
   '/api/auth': typeof ApiAuthRoute
   '/api/auth-check': typeof ApiAuthCheckRoute
@@ -1123,6 +1205,7 @@ export interface FileRoutesByTo {
   '/api/claude-tasks': typeof ApiClaudeTasksRouteWithChildren
   '/api/claude-tasks-assignees': typeof ApiClaudeTasksAssigneesRoute
   '/api/claude-update': typeof ApiClaudeUpdateRoute
+  '/api/commands': typeof ApiCommandsRoute
   '/api/conductor-spawn': typeof ApiConductorSpawnRoute
   '/api/conductor-stop': typeof ApiConductorStopRoute
   '/api/config-patch': typeof ApiConfigPatchRoute
@@ -1197,6 +1280,9 @@ export interface FileRoutesByTo {
   '/api/claude-proxy/$': typeof ApiClaudeProxySplatRoute
   '/api/claude-tasks/$taskId': typeof ApiClaudeTasksTaskIdRoute
   '/api/dashboard/overview': typeof ApiDashboardOverviewRoute
+  '/api/external-memory/candidates': typeof ApiExternalMemoryCandidatesRoute
+  '/api/external-memory/providers': typeof ApiExternalMemoryProvidersRoute
+  '/api/external-memory/search': typeof ApiExternalMemorySearchRoute
   '/api/hermes-tasks/$taskId': typeof ApiHermesTasksTaskIdRoute
   '/api/hermesworld/reservations': typeof ApiHermesworldReservationsRouteWithChildren
   '/api/knowledge/config': typeof ApiKnowledgeConfigRoute
@@ -1225,8 +1311,12 @@ export interface FileRoutesByTo {
   '/api/profiles/list': typeof ApiProfilesListRoute
   '/api/profiles/read': typeof ApiProfilesReadRoute
   '/api/profiles/rename': typeof ApiProfilesRenameRoute
+  '/api/profiles/skills': typeof ApiProfilesSkillsRoute
+  '/api/profiles/toggle-skill': typeof ApiProfilesToggleSkillRoute
   '/api/profiles/update': typeof ApiProfilesUpdateRoute
   '/api/profiles/update-identity': typeof ApiProfilesUpdateIdentityRoute
+  '/api/runs/active': typeof ApiRunsActiveRoute
+  '/api/sessions/search': typeof ApiSessionsSearchRoute
   '/api/sessions/send': typeof ApiSessionsSendRoute
   '/api/skills/hub-search': typeof ApiSkillsHubSearchRoute
   '/api/skills/install': typeof ApiSkillsInstallRoute
@@ -1243,6 +1333,7 @@ export interface FileRoutesByTo {
   '/api/mcp/hub-sources/$id': typeof ApiMcpHubSourcesIdRoute
   '/api/sessions/$sessionKey/active-run': typeof ApiSessionsSessionKeyActiveRunRoute
   '/api/sessions/$sessionKey/status': typeof ApiSessionsSessionKeyStatusRoute
+  '/api/runs/$sessionKey/$runId/abandon': typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1252,6 +1343,7 @@ export interface FileRoutesById {
   '/conductor': typeof ConductorRoute
   '/dashboard': typeof DashboardRoute
   '/early-access': typeof EarlyAccessRoute
+  '/echo-studio': typeof EchoStudioRoute
   '/files': typeof FilesRoute
   '/hermes-world': typeof HermesWorldRoute
   '/jobs': typeof JobsRoute
@@ -1270,6 +1362,7 @@ export interface FileRoutesById {
   '/vt-capital': typeof VtCapitalRoute
   '/workflows': typeof WorkflowsRoute
   '/world': typeof WorldRoute
+  '/api/agent-bus': typeof ApiAgentBusRoute
   '/api/artifacts': typeof ApiArtifactsRouteWithChildren
   '/api/auth': typeof ApiAuthRoute
   '/api/auth-check': typeof ApiAuthCheckRoute
@@ -1279,6 +1372,7 @@ export interface FileRoutesById {
   '/api/claude-tasks': typeof ApiClaudeTasksRouteWithChildren
   '/api/claude-tasks-assignees': typeof ApiClaudeTasksAssigneesRoute
   '/api/claude-update': typeof ApiClaudeUpdateRoute
+  '/api/commands': typeof ApiCommandsRoute
   '/api/conductor-spawn': typeof ApiConductorSpawnRoute
   '/api/conductor-stop': typeof ApiConductorStopRoute
   '/api/config-patch': typeof ApiConfigPatchRoute
@@ -1353,6 +1447,9 @@ export interface FileRoutesById {
   '/api/claude-proxy/$': typeof ApiClaudeProxySplatRoute
   '/api/claude-tasks/$taskId': typeof ApiClaudeTasksTaskIdRoute
   '/api/dashboard/overview': typeof ApiDashboardOverviewRoute
+  '/api/external-memory/candidates': typeof ApiExternalMemoryCandidatesRoute
+  '/api/external-memory/providers': typeof ApiExternalMemoryProvidersRoute
+  '/api/external-memory/search': typeof ApiExternalMemorySearchRoute
   '/api/hermes-tasks/$taskId': typeof ApiHermesTasksTaskIdRoute
   '/api/hermesworld/reservations': typeof ApiHermesworldReservationsRouteWithChildren
   '/api/knowledge/config': typeof ApiKnowledgeConfigRoute
@@ -1381,8 +1478,12 @@ export interface FileRoutesById {
   '/api/profiles/list': typeof ApiProfilesListRoute
   '/api/profiles/read': typeof ApiProfilesReadRoute
   '/api/profiles/rename': typeof ApiProfilesRenameRoute
+  '/api/profiles/skills': typeof ApiProfilesSkillsRoute
+  '/api/profiles/toggle-skill': typeof ApiProfilesToggleSkillRoute
   '/api/profiles/update': typeof ApiProfilesUpdateRoute
   '/api/profiles/update-identity': typeof ApiProfilesUpdateIdentityRoute
+  '/api/runs/active': typeof ApiRunsActiveRoute
+  '/api/sessions/search': typeof ApiSessionsSearchRoute
   '/api/sessions/send': typeof ApiSessionsSendRoute
   '/api/skills/hub-search': typeof ApiSkillsHubSearchRoute
   '/api/skills/install': typeof ApiSkillsInstallRoute
@@ -1399,6 +1500,7 @@ export interface FileRoutesById {
   '/api/mcp/hub-sources/$id': typeof ApiMcpHubSourcesIdRoute
   '/api/sessions/$sessionKey/active-run': typeof ApiSessionsSessionKeyActiveRunRoute
   '/api/sessions/$sessionKey/status': typeof ApiSessionsSessionKeyStatusRoute
+  '/api/runs/$sessionKey/$runId/abandon': typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1409,6 +1511,7 @@ export interface FileRouteTypes {
     | '/conductor'
     | '/dashboard'
     | '/early-access'
+    | '/echo-studio'
     | '/files'
     | '/hermes-world'
     | '/jobs'
@@ -1427,6 +1530,7 @@ export interface FileRouteTypes {
     | '/vt-capital'
     | '/workflows'
     | '/world'
+    | '/api/agent-bus'
     | '/api/artifacts'
     | '/api/auth'
     | '/api/auth-check'
@@ -1436,6 +1540,7 @@ export interface FileRouteTypes {
     | '/api/claude-tasks'
     | '/api/claude-tasks-assignees'
     | '/api/claude-update'
+    | '/api/commands'
     | '/api/conductor-spawn'
     | '/api/conductor-stop'
     | '/api/config-patch'
@@ -1510,6 +1615,9 @@ export interface FileRouteTypes {
     | '/api/claude-proxy/$'
     | '/api/claude-tasks/$taskId'
     | '/api/dashboard/overview'
+    | '/api/external-memory/candidates'
+    | '/api/external-memory/providers'
+    | '/api/external-memory/search'
     | '/api/hermes-tasks/$taskId'
     | '/api/hermesworld/reservations'
     | '/api/knowledge/config'
@@ -1538,8 +1646,12 @@ export interface FileRouteTypes {
     | '/api/profiles/list'
     | '/api/profiles/read'
     | '/api/profiles/rename'
+    | '/api/profiles/skills'
+    | '/api/profiles/toggle-skill'
     | '/api/profiles/update'
     | '/api/profiles/update-identity'
+    | '/api/runs/active'
+    | '/api/sessions/search'
     | '/api/sessions/send'
     | '/api/skills/hub-search'
     | '/api/skills/install'
@@ -1556,6 +1668,7 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-sources/$id'
     | '/api/sessions/$sessionKey/active-run'
     | '/api/sessions/$sessionKey/status'
+    | '/api/runs/$sessionKey/$runId/abandon'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1564,6 +1677,7 @@ export interface FileRouteTypes {
     | '/conductor'
     | '/dashboard'
     | '/early-access'
+    | '/echo-studio'
     | '/files'
     | '/hermes-world'
     | '/jobs'
@@ -1581,6 +1695,7 @@ export interface FileRouteTypes {
     | '/vt-capital'
     | '/workflows'
     | '/world'
+    | '/api/agent-bus'
     | '/api/artifacts'
     | '/api/auth'
     | '/api/auth-check'
@@ -1590,6 +1705,7 @@ export interface FileRouteTypes {
     | '/api/claude-tasks'
     | '/api/claude-tasks-assignees'
     | '/api/claude-update'
+    | '/api/commands'
     | '/api/conductor-spawn'
     | '/api/conductor-stop'
     | '/api/config-patch'
@@ -1664,6 +1780,9 @@ export interface FileRouteTypes {
     | '/api/claude-proxy/$'
     | '/api/claude-tasks/$taskId'
     | '/api/dashboard/overview'
+    | '/api/external-memory/candidates'
+    | '/api/external-memory/providers'
+    | '/api/external-memory/search'
     | '/api/hermes-tasks/$taskId'
     | '/api/hermesworld/reservations'
     | '/api/knowledge/config'
@@ -1692,8 +1811,12 @@ export interface FileRouteTypes {
     | '/api/profiles/list'
     | '/api/profiles/read'
     | '/api/profiles/rename'
+    | '/api/profiles/skills'
+    | '/api/profiles/toggle-skill'
     | '/api/profiles/update'
     | '/api/profiles/update-identity'
+    | '/api/runs/active'
+    | '/api/sessions/search'
     | '/api/sessions/send'
     | '/api/skills/hub-search'
     | '/api/skills/install'
@@ -1710,6 +1833,7 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-sources/$id'
     | '/api/sessions/$sessionKey/active-run'
     | '/api/sessions/$sessionKey/status'
+    | '/api/runs/$sessionKey/$runId/abandon'
   id:
     | '__root__'
     | '/'
@@ -1718,6 +1842,7 @@ export interface FileRouteTypes {
     | '/conductor'
     | '/dashboard'
     | '/early-access'
+    | '/echo-studio'
     | '/files'
     | '/hermes-world'
     | '/jobs'
@@ -1736,6 +1861,7 @@ export interface FileRouteTypes {
     | '/vt-capital'
     | '/workflows'
     | '/world'
+    | '/api/agent-bus'
     | '/api/artifacts'
     | '/api/auth'
     | '/api/auth-check'
@@ -1745,6 +1871,7 @@ export interface FileRouteTypes {
     | '/api/claude-tasks'
     | '/api/claude-tasks-assignees'
     | '/api/claude-update'
+    | '/api/commands'
     | '/api/conductor-spawn'
     | '/api/conductor-stop'
     | '/api/config-patch'
@@ -1819,6 +1946,9 @@ export interface FileRouteTypes {
     | '/api/claude-proxy/$'
     | '/api/claude-tasks/$taskId'
     | '/api/dashboard/overview'
+    | '/api/external-memory/candidates'
+    | '/api/external-memory/providers'
+    | '/api/external-memory/search'
     | '/api/hermes-tasks/$taskId'
     | '/api/hermesworld/reservations'
     | '/api/knowledge/config'
@@ -1847,8 +1977,12 @@ export interface FileRouteTypes {
     | '/api/profiles/list'
     | '/api/profiles/read'
     | '/api/profiles/rename'
+    | '/api/profiles/skills'
+    | '/api/profiles/toggle-skill'
     | '/api/profiles/update'
     | '/api/profiles/update-identity'
+    | '/api/runs/active'
+    | '/api/sessions/search'
     | '/api/sessions/send'
     | '/api/skills/hub-search'
     | '/api/skills/install'
@@ -1865,6 +1999,7 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-sources/$id'
     | '/api/sessions/$sessionKey/active-run'
     | '/api/sessions/$sessionKey/status'
+    | '/api/runs/$sessionKey/$runId/abandon'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1874,6 +2009,7 @@ export interface RootRouteChildren {
   ConductorRoute: typeof ConductorRoute
   DashboardRoute: typeof DashboardRoute
   EarlyAccessRoute: typeof EarlyAccessRoute
+  EchoStudioRoute: typeof EchoStudioRoute
   FilesRoute: typeof FilesRoute
   HermesWorldRoute: typeof HermesWorldRoute
   JobsRoute: typeof JobsRoute
@@ -1892,6 +2028,7 @@ export interface RootRouteChildren {
   VtCapitalRoute: typeof VtCapitalRoute
   WorkflowsRoute: typeof WorkflowsRoute
   WorldRoute: typeof WorldRoute
+  ApiAgentBusRoute: typeof ApiAgentBusRoute
   ApiArtifactsRoute: typeof ApiArtifactsRouteWithChildren
   ApiAuthRoute: typeof ApiAuthRoute
   ApiAuthCheckRoute: typeof ApiAuthCheckRoute
@@ -1901,6 +2038,7 @@ export interface RootRouteChildren {
   ApiClaudeTasksRoute: typeof ApiClaudeTasksRouteWithChildren
   ApiClaudeTasksAssigneesRoute: typeof ApiClaudeTasksAssigneesRoute
   ApiClaudeUpdateRoute: typeof ApiClaudeUpdateRoute
+  ApiCommandsRoute: typeof ApiCommandsRoute
   ApiConductorSpawnRoute: typeof ApiConductorSpawnRoute
   ApiConductorStopRoute: typeof ApiConductorStopRoute
   ApiConfigPatchRoute: typeof ApiConfigPatchRoute
@@ -1969,6 +2107,9 @@ export interface RootRouteChildren {
   ChatIndexRoute: typeof ChatIndexRoute
   ApiClaudeProxySplatRoute: typeof ApiClaudeProxySplatRoute
   ApiDashboardOverviewRoute: typeof ApiDashboardOverviewRoute
+  ApiExternalMemoryCandidatesRoute: typeof ApiExternalMemoryCandidatesRoute
+  ApiExternalMemoryProvidersRoute: typeof ApiExternalMemoryProvidersRoute
+  ApiExternalMemorySearchRoute: typeof ApiExternalMemorySearchRoute
   ApiHermesworldReservationsRoute: typeof ApiHermesworldReservationsRouteWithChildren
   ApiKnowledgeConfigRoute: typeof ApiKnowledgeConfigRoute
   ApiKnowledgeGraphRoute: typeof ApiKnowledgeGraphRoute
@@ -1985,12 +2126,16 @@ export interface RootRouteChildren {
   ApiProfilesListRoute: typeof ApiProfilesListRoute
   ApiProfilesReadRoute: typeof ApiProfilesReadRoute
   ApiProfilesRenameRoute: typeof ApiProfilesRenameRoute
+  ApiProfilesSkillsRoute: typeof ApiProfilesSkillsRoute
+  ApiProfilesToggleSkillRoute: typeof ApiProfilesToggleSkillRoute
   ApiProfilesUpdateRoute: typeof ApiProfilesUpdateRoute
   ApiProfilesUpdateIdentityRoute: typeof ApiProfilesUpdateIdentityRoute
+  ApiRunsActiveRoute: typeof ApiRunsActiveRoute
   ApiUpdateAgentRoute: typeof ApiUpdateAgentRoute
   ApiUpdateDismissNotesRoute: typeof ApiUpdateDismissNotesRoute
   ApiUpdateStatusRoute: typeof ApiUpdateStatusRoute
   ApiUpdateWorkspaceRoute: typeof ApiUpdateWorkspaceRoute
+  ApiRunsSessionKeyRunIdAbandonRoute: typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2119,6 +2264,13 @@ declare module '@tanstack/react-router' {
       path: '/files'
       fullPath: '/files'
       preLoaderRoute: typeof FilesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/echo-studio': {
+      id: '/echo-studio'
+      path: '/echo-studio'
+      fullPath: '/echo-studio'
+      preLoaderRoute: typeof EchoStudioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/early-access': {
@@ -2646,6 +2798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiConductorSpawnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/commands': {
+      id: '/api/commands'
+      path: '/api/commands'
+      fullPath: '/api/commands'
+      preLoaderRoute: typeof ApiCommandsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/claude-update': {
       id: '/api/claude-update'
       path: '/api/claude-update'
@@ -2707,6 +2866,13 @@ declare module '@tanstack/react-router' {
       path: '/api/artifacts'
       fullPath: '/api/artifacts'
       preLoaderRoute: typeof ApiArtifactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/agent-bus': {
+      id: '/api/agent-bus'
+      path: '/api/agent-bus'
+      fullPath: '/api/agent-bus'
+      preLoaderRoute: typeof ApiAgentBusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/update/workspace': {
@@ -2786,6 +2952,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSessionsSendRouteImport
       parentRoute: typeof ApiSessionsRoute
     }
+    '/api/sessions/search': {
+      id: '/api/sessions/search'
+      path: '/search'
+      fullPath: '/api/sessions/search'
+      preLoaderRoute: typeof ApiSessionsSearchRouteImport
+      parentRoute: typeof ApiSessionsRoute
+    }
+    '/api/runs/active': {
+      id: '/api/runs/active'
+      path: '/api/runs/active'
+      fullPath: '/api/runs/active'
+      preLoaderRoute: typeof ApiRunsActiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/profiles/update-identity': {
       id: '/api/profiles/update-identity'
       path: '/api/profiles/update-identity'
@@ -2798,6 +2978,20 @@ declare module '@tanstack/react-router' {
       path: '/api/profiles/update'
       fullPath: '/api/profiles/update'
       preLoaderRoute: typeof ApiProfilesUpdateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/profiles/toggle-skill': {
+      id: '/api/profiles/toggle-skill'
+      path: '/api/profiles/toggle-skill'
+      fullPath: '/api/profiles/toggle-skill'
+      preLoaderRoute: typeof ApiProfilesToggleSkillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/profiles/skills': {
+      id: '/api/profiles/skills'
+      path: '/api/profiles/skills'
+      fullPath: '/api/profiles/skills'
+      preLoaderRoute: typeof ApiProfilesSkillsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/profiles/rename': {
@@ -2996,6 +3190,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHermesTasksTaskIdRouteImport
       parentRoute: typeof ApiHermesTasksRoute
     }
+    '/api/external-memory/search': {
+      id: '/api/external-memory/search'
+      path: '/api/external-memory/search'
+      fullPath: '/api/external-memory/search'
+      preLoaderRoute: typeof ApiExternalMemorySearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/external-memory/providers': {
+      id: '/api/external-memory/providers'
+      path: '/api/external-memory/providers'
+      fullPath: '/api/external-memory/providers'
+      preLoaderRoute: typeof ApiExternalMemoryProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/external-memory/candidates': {
+      id: '/api/external-memory/candidates'
+      path: '/api/external-memory/candidates'
+      fullPath: '/api/external-memory/candidates'
+      preLoaderRoute: typeof ApiExternalMemoryCandidatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/dashboard/overview': {
       id: '/api/dashboard/overview'
       path: '/api/dashboard/overview'
@@ -3065,6 +3280,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/hermesworld/reservations/confirm'
       preLoaderRoute: typeof ApiHermesworldReservationsConfirmRouteImport
       parentRoute: typeof ApiHermesworldReservationsRoute
+    }
+    '/api/runs/$sessionKey/$runId/abandon': {
+      id: '/api/runs/$sessionKey/$runId/abandon'
+      path: '/api/runs/$sessionKey/$runId/abandon'
+      fullPath: '/api/runs/$sessionKey/$runId/abandon'
+      preLoaderRoute: typeof ApiRunsSessionKeyRunIdAbandonRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -3207,12 +3429,14 @@ const ApiMemoryRouteWithChildren = ApiMemoryRoute._addFileChildren(
 )
 
 interface ApiSessionsRouteChildren {
+  ApiSessionsSearchRoute: typeof ApiSessionsSearchRoute
   ApiSessionsSendRoute: typeof ApiSessionsSendRoute
   ApiSessionsSessionKeyActiveRunRoute: typeof ApiSessionsSessionKeyActiveRunRoute
   ApiSessionsSessionKeyStatusRoute: typeof ApiSessionsSessionKeyStatusRoute
 }
 
 const ApiSessionsRouteChildren: ApiSessionsRouteChildren = {
+  ApiSessionsSearchRoute: ApiSessionsSearchRoute,
   ApiSessionsSendRoute: ApiSessionsSendRoute,
   ApiSessionsSessionKeyActiveRunRoute: ApiSessionsSessionKeyActiveRunRoute,
   ApiSessionsSessionKeyStatusRoute: ApiSessionsSessionKeyStatusRoute,
@@ -3286,6 +3510,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConductorRoute: ConductorRoute,
   DashboardRoute: DashboardRoute,
   EarlyAccessRoute: EarlyAccessRoute,
+  EchoStudioRoute: EchoStudioRoute,
   FilesRoute: FilesRoute,
   HermesWorldRoute: HermesWorldRoute,
   JobsRoute: JobsRoute,
@@ -3304,6 +3529,7 @@ const rootRouteChildren: RootRouteChildren = {
   VtCapitalRoute: VtCapitalRoute,
   WorkflowsRoute: WorkflowsRoute,
   WorldRoute: WorldRoute,
+  ApiAgentBusRoute: ApiAgentBusRoute,
   ApiArtifactsRoute: ApiArtifactsRouteWithChildren,
   ApiAuthRoute: ApiAuthRoute,
   ApiAuthCheckRoute: ApiAuthCheckRoute,
@@ -3313,6 +3539,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiClaudeTasksRoute: ApiClaudeTasksRouteWithChildren,
   ApiClaudeTasksAssigneesRoute: ApiClaudeTasksAssigneesRoute,
   ApiClaudeUpdateRoute: ApiClaudeUpdateRoute,
+  ApiCommandsRoute: ApiCommandsRoute,
   ApiConductorSpawnRoute: ApiConductorSpawnRoute,
   ApiConductorStopRoute: ApiConductorStopRoute,
   ApiConfigPatchRoute: ApiConfigPatchRoute,
@@ -3381,6 +3608,9 @@ const rootRouteChildren: RootRouteChildren = {
   ChatIndexRoute: ChatIndexRoute,
   ApiClaudeProxySplatRoute: ApiClaudeProxySplatRoute,
   ApiDashboardOverviewRoute: ApiDashboardOverviewRoute,
+  ApiExternalMemoryCandidatesRoute: ApiExternalMemoryCandidatesRoute,
+  ApiExternalMemoryProvidersRoute: ApiExternalMemoryProvidersRoute,
+  ApiExternalMemorySearchRoute: ApiExternalMemorySearchRoute,
   ApiHermesworldReservationsRoute: ApiHermesworldReservationsRouteWithChildren,
   ApiKnowledgeConfigRoute: ApiKnowledgeConfigRoute,
   ApiKnowledgeGraphRoute: ApiKnowledgeGraphRoute,
@@ -3397,12 +3627,16 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProfilesListRoute: ApiProfilesListRoute,
   ApiProfilesReadRoute: ApiProfilesReadRoute,
   ApiProfilesRenameRoute: ApiProfilesRenameRoute,
+  ApiProfilesSkillsRoute: ApiProfilesSkillsRoute,
+  ApiProfilesToggleSkillRoute: ApiProfilesToggleSkillRoute,
   ApiProfilesUpdateRoute: ApiProfilesUpdateRoute,
   ApiProfilesUpdateIdentityRoute: ApiProfilesUpdateIdentityRoute,
+  ApiRunsActiveRoute: ApiRunsActiveRoute,
   ApiUpdateAgentRoute: ApiUpdateAgentRoute,
   ApiUpdateDismissNotesRoute: ApiUpdateDismissNotesRoute,
   ApiUpdateStatusRoute: ApiUpdateStatusRoute,
   ApiUpdateWorkspaceRoute: ApiUpdateWorkspaceRoute,
+  ApiRunsSessionKeyRunIdAbandonRoute: ApiRunsSessionKeyRunIdAbandonRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

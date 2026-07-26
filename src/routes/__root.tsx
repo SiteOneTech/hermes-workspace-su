@@ -8,6 +8,9 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import appCss from '../styles.css?url'
+import { getRootSurfaceState } from './-root-layout-state'
+import {  fetchClaudeAuthStatus } from '@/lib/claude-auth'
+import type {AuthStatus} from '@/lib/claude-auth';
 import { SearchModal } from '@/components/search/search-modal'
 import { UsageMeter } from '@/components/usage-meter'
 import { TerminalShortcutListener } from '@/components/terminal-shortcut-listener'
@@ -18,7 +21,7 @@ import { Toaster } from '@/components/ui/toast'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { KeyboardShortcutsModal } from '@/components/keyboard-shortcuts-modal'
 import { UpdateCenterNotifier } from '@/components/update-center-notifier'
-import { initializeSettingsAppearance, useSettings } from '@/hooks/use-settings'
+import { applyInterfacePreferences, initializeSettingsAppearance, useSettings } from '@/hooks/use-settings'
 import { useApplyChatWidth } from '@/hooks/use-chat-settings'
 import {
   ClaudeOnboarding,
@@ -27,24 +30,15 @@ import {
 } from '@/components/onboarding/claude-onboarding'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { LoginScreen } from '@/components/auth/login-screen'
-import { fetchClaudeAuthStatus, type AuthStatus } from '@/lib/claude-auth'
-import { getRootSurfaceState } from './-root-layout-state'
 
-const APP_CSP = [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "object-src 'none'",
-  "form-action 'self'",
-  // frame-ancestors is ignored in meta CSP and must be sent as an HTTP header.
-  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
-  "img-src 'self' data: blob: https:",
-  "font-src 'self' data: https://fonts.gstatic.com",
-  "connect-src 'self' ws: wss: http: https:",
-  "worker-src 'self' blob:",
-  "media-src 'self' blob: data:",
-  "frame-src 'self' http: https:",
-].join('; ')
+// Content Security Policy used to be emitted here as a `<meta http-equiv>`
+// tag. That made the workspace unusable when the Cloudflare JS Challenge
+// tripped on a request and rewrote the served HTML with its own per-request
+// `<meta name="Content-Security-Policy">` containing a nonce, producing a
+// concatenated malformed policy that chromium rejected (e.g.
+// `style-src ' 'nonce-…'; self`). The policy now lives in src/lib/csp.ts
+// and is emitted as a real HTTP response header by server-entry.js
+// (production) and vite.config.ts (dev/preview). Leave it that way.
 
 const THEME_STORAGE_KEY = 'claude-theme'
 const DEFAULT_THEME = 'claude-nous'
@@ -112,6 +106,13 @@ const themeColorScript = `
     root.style.setProperty('color-scheme', isDark ? 'dark' : 'light')
   } catch {}
 })()
+`
+
+const DEFAULT_SPLASH_HTML = `
+<img src="/claude-avatar.webp" alt="Hermes Agent" style="width:80px;height:80px;margin-bottom:20px;border-radius:16px;filter:drop-shadow(0 8px 32px color-mix(in srgb,#FFAC02 45%, transparent))" />
+<img src="/claude-banner.png" alt="Hermes Workspace" style="width:280px;height:auto;margin-bottom:8px;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.5))" />
+<div style="font:400 14px/1 system-ui,-apple-system,sans-serif;letter-spacing:0.04em;color:#9CB2AE">Workspace</div>
+<div style="margin-top:28px;width:140px;height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;position:relative"><div id="splash-bar" style="width:0%;height:100%;background:#FFAC02;border-radius:3px;transition:width 0.4s ease"></div></div>
 `
 
 export const Route = createRootRoute({
@@ -267,6 +268,10 @@ function RootLayout() {
   useApplyChatWidth()
 
   useEffect(() => {
+    applyInterfacePreferences(settings)
+  }, [settings])
+
+  useEffect(() => {
     setMounted(true)
     initializeSettingsAppearance()
 
@@ -390,7 +395,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta httpEquiv="Content-Security-Policy" content={APP_CSP} />
+        {/* Content-Security-Policy is set as an HTTP response header in
+            server-entry.js and vite.config.ts. Don't re-emit it as a `<meta>`
+            here — see the comment in src/lib/csp.ts for why duplicating it
+            in the HTML is unsafe when an edge proxy mutates the body. */}
         <script
           dangerouslySetInnerHTML={{
             __html: wrapInlineScript(`
@@ -416,7 +424,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
-        <div id="splash-screen" aria-hidden="true" style={{ display: 'none' }} />
+        {/* The inline splash bootstrap mutates this node before React hydrates.
+            Keep default splash markup in the server/client tree, then suppress
+            parent-level style/theme mutations for this intentionally browser-owned DOM. */}
+        <div
+          id="splash-screen"
+          aria-hidden="true"
+          suppressHydrationWarning
+          style={{ display: 'none' }}
+          dangerouslySetInnerHTML={{ __html: DEFAULT_SPLASH_HTML }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: wrapInlineScript(`
